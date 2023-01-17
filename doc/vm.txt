@@ -1,0 +1,58 @@
+Registers
+    r0, r1, r2, ..., r14                    ; general purpose
+    sp                                      ; stack pointer
+    pc, flags                               ; program counter, stack pointer, flags
+
+Calling convention
+    - all parameters passed on stack; cleared by the callee
+    - all return values passed on stack; cleared by the caller
+    - no registers are preserved between calls
+
+Memory layout
+    0x00000000      text                        ; 1.0 GB
+    0x40000000      heap start                  ; 2.5 GB
+    0xe0000000      heap end / stack end
+    0xffffffff      stack start                 ; 0.5 GB
+
+Instructions
+    LOAD        <reg>,      [<reg>]
+    STORE       [<reg>],    <reg>
+    MOV         <reg>,      <reg>
+    MOV         <reg>,      <imm>
+    ADD         <reg>,      <reg>
+    ADD         <reg>,      <imm>
+    SUB         <reg>,      <reg>
+    SUB         <reg>,      <imm>
+    AND         <reg>,      <reg>
+    AND         <reg>,      <imm>
+    OR          <reg>,      <reg>
+    OR          <reg>,      <imm>
+    XOR         <reg>,      <reg>
+    XOR         <reg>,      <imm>
+    NOT         <reg>
+    CMP         <reg>,      <reg>
+    CMP         <reg>,      <imm>
+    PUSH        <reg>
+    POP         <reg>
+    JMP<cond>   <imm>
+    CALL        <imm>
+    RET
+    INVOKE      <imm>                           ; call builtin function at address <imm>
+where
+    <reg>       is any register
+    <imm>       is any immediate value
+    [<reg>]     is the value at the memory location <reg> points to
+    <cond>      n/a, Z, NZ, EQ, NE, GT, LT, GE, LE
+
+Instruction encoding
+    |  opcode  | 1st operand    2nd operand |
+    |__1 byte__|________1/4/5 bytes_________|
+
+Opcode encoding
+    |  operation | imm/reg  |
+    |___7 bits___|__1 bit __|
+    |________1 byte_________|
+
+Operand encoding
+    |   reg    |        |    imm    |
+    |__4 bits__|        |__4 bytes__|
