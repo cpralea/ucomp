@@ -35,7 +35,7 @@ factorial:
 
     ; r1 = n
     add r0, 4
-    mov r1, [r0]
+    load r1, [r0]
 
     ; if n <= 1 then
     cmp r1, 1
@@ -43,7 +43,7 @@ factorial:
 
     ; return 1
     mov r1, 1
-    mov [r0], r1
+    store [r0], r1
     ret
 
     ; else
@@ -87,13 +87,13 @@ factorial:
 
     ; put the return address on top of the return value
     sub r0, 4
-    mov r2, [r0]
+    load r2, [r0]
     add r0, 0
-    mov [r0], r2
-    add r0,4
+    store [r0], r2
+    add r0, 4
 
     ; return n!
-    mov [r0], r1
+    store [r0], r1
     ret
 
 
@@ -104,11 +104,11 @@ multiply:
 
     ; r3 = b
     add r0, 4
-    mov r3, [r0]
+    load r3, [r0]
 
     ; r2 = a
     add r0, 4
-    mov r2, [r0]
+    load r2, [r0]
 
     ; r1 = product = 0
     mov r1, 0
@@ -130,11 +130,11 @@ multiply:
 .l2:
     ; put the return address on top of the return value
     sub r0, 8
-    mov r2, [r0]
+    load r2, [r0]
     add r0, 4
-    mov [r0], r2
-    add r0,4
+    store [r0], r2
+    add r0, 4
 
     ; return product
-    mov [r0], r1
+    store [r0], r1
     ret

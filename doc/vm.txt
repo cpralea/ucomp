@@ -1,7 +1,7 @@
 Registers
-    r0, r1, r2, ..., r14                    ; general purpose
-    sp                                      ; stack pointer
-    pc, flags                               ; program counter, stack pointer, flags
+    r0, r1, r2, ..., r13                    ; general purpose
+    sp, pc                                  ; stack pointer
+    flags                                   ; program counter, stack pointer, flags
 
 Calling convention
     - all parameters passed on stack; cleared by the callee
@@ -34,9 +34,9 @@ Instructions
     CMP         <reg>,      <imm>
     PUSH        <reg>
     POP         <reg>
-    JMP<cond>   <imm>
     CALL        <imm>
     RET
+    JMP<cond>   <imm>
     INVOKE      <imm>                           ; call builtin function at address <imm>
 where
     <reg>       is any register
