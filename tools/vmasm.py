@@ -65,8 +65,28 @@ regex_store                 = re.compile(r'^STORE\s+\[([^\s]+)\]\s*,\s*([^\s]+)$
 regex_generic_instr_dst_src = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*,\s*([^\s]+)$')
 regex_generic_instr_op      = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*$')
 
+low_level_label_start: str = '.'
+sys_level_label_start: str = '$'
+
+labelCurTopLevel: str = 'entry'
+labelRefs: Dict[str, List[int]] = {}
+labelAddr: Dict[str, int] = {
+    "$vm_exit" : 0xffffff00 | 0
+}
+
 program: List[int] = []
-labels: Dict[str, int] = {}
+
+
+def is_high_level_label(label: str) -> bool:
+    return not label.startswith(low_level_label_start)
+def is_low_level_label(label: str) -> bool:
+    return not is_high_level_label(label)
+def is_sys_level_label(label: str) -> bool:
+    return label.startswith(sys_level_label_start)
+
+
+def mangle_label(label: str) -> str:
+    return label if is_high_level_label(label) else f"{labelCurTopLevel}{label}"
 
 
 def gen_opcode(instr: Instruction, ri: RegImm) -> int:
@@ -161,18 +181,21 @@ def asm_generic_instr_dst_src(
         gen_rr: Callable[[Register, Register], int],
         gen_ri: Callable[[Register, int], int]
     ) -> int:
+
     m = pattern.match(line.upper())
     assert m is not None
+
     dst, src = Register[m.group(1).upper()], m.group(2).upper()
+
     m = regex_imm_dec.match(src)
     if m is None:
         m = regex_imm_hex.match(src)
-    if m is None:
-        src = Register[src]
-        return gen_rr(dst, src)
-    else:
+    if m is not None:
         src = int(src)
         return gen_ri(dst, src)
+
+    src = Register[src]
+    return gen_rr(dst, src)
 
 
 def asm_generic_instr_op(
@@ -181,28 +204,33 @@ def asm_generic_instr_op(
         gen_r: Optional[Callable[[Register], int]],
         gen_i: Optional[Callable[[int], int]]
     ) -> int:
+
     m = pattern.match(line.upper())
     assert m is not None
+    
     op = m.group(1).upper()
+    
     m = regex_imm_dec.match(op)
     if m is None:
         m = regex_imm_hex.match(op)
-    if m is None:
-        if op in dir(Register):
-            op = Register[op]
-            assert (gen_r is not None) and (gen_i is None)
-            return gen_r(op)
-        else:
-            if op in labels:
-                op = labels[op]
-            else:
-                op = 0
-            assert (gen_r is None) and (gen_i is not None)
-            return gen_i(op)
-    else:
+    if m is not None:
         op = int(op)
         assert (gen_r is None) and (gen_i is not None)
         return gen_i(op)
+
+    if op in dir(Register):
+        op = Register[op]
+        assert (gen_r is not None) and (gen_i is None)
+        return gen_r(op)
+
+    label = mangle_label(op.lower())
+    if label not in labelRefs:
+        labelRefs[label] = []
+    labelRefs[label].append(len(program))
+
+    op = 0
+    assert (gen_r is None) and (gen_i is not None)
+    return gen_i(op)
 
 
 def asm_load(line: str) -> int:
@@ -316,10 +344,10 @@ def asm_instr(instr: str, line: str):
 
 
 def asm_label(label: str):
-    if not label.startswith('.'):
-        for key in [k for k in labels.keys() if k.startswith('.')]:
-            labels.pop(key)
-    labels[label] = len(program)
+    global labelCurTopLevel
+    if is_high_level_label(label):
+        labelCurTopLevel = label
+    labelAddr[mangle_label(label)] = len(program)
 
 
 def strip_comment(line: str) -> str:
@@ -352,9 +380,18 @@ def asm_line(line: str):
         return
 
 
+def link():
+    print(labelAddr)
+    for label, refs in labelRefs.items():
+        addr = labelAddr[label]
+        for ref in refs:
+            program[ref] = program[ref] | addr
+
+
 def asm_file(file: TextIO):
     for line in file:
         asm_line(line)
+    link()
 
 
 def dump_program():

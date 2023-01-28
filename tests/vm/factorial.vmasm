@@ -25,7 +25,7 @@ main:
     pop r0
     
     ; exit VM
-    invoke .vm_exit
+    invoke $vm_exit
 
 
 
