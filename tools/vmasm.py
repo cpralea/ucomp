@@ -381,7 +381,6 @@ def asm_line(line: str):
 
 
 def link():
-    print(labelAddr)
     for label, refs in labelRefs.items():
         addr = labelAddr[label]
         for ref in refs:
