@@ -1,3 +1,4 @@
+from math import ceil
 import re
 import sys
 
@@ -75,6 +76,7 @@ labelAddr: Dict[str, int] = {
 }
 
 program: List[int] = []
+program_size: int = 0
 
 
 def is_high_level_label(label: str) -> bool:
@@ -289,65 +291,74 @@ def asm_invoke(line: str) -> int:
     return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_invoke_i)
 
 
+def num_bytes(bin_enc: int) -> int:
+    return ceil(4 * len(f"{bin_enc:x}") / 8)
+
+
 def asm_instr(instr: str, line: str):
     match instr.upper():
         case 'LOAD':
-            program.append(asm_load(line))
+            bin_enc = asm_load(line)
         case 'STORE':
-            program.append(asm_store(line))
+            bin_enc = asm_store(line)
         case 'MOV':
-            program.append(asm_mov(line))
+            bin_enc = asm_mov(line)
         case 'ADD':
-            program.append(asm_add(line))
+            bin_enc = asm_add(line)
         case 'SUB':
-            program.append(asm_sub(line))
+            bin_enc = asm_sub(line)
         case 'AND':
-            program.append(asm_and(line))
+            bin_enc = asm_and(line)
         case 'OR':
-            program.append(asm_or(line))
+            bin_enc = asm_or(line)
         case 'XOR':
-            program.append(asm_xor(line))
+            bin_enc = asm_xor(line)
         case 'NOT':
-            program.append(asm_not(line))
+            bin_enc = asm_not(line)
         case 'CMP':
-            program.append(asm_cmp(line))
+            bin_enc = asm_cmp(line)
         case 'PUSH':
-            program.append(asm_push(line))
+            bin_enc = asm_push(line)
         case 'POP':
-            program.append(asm_pop(line))
+            bin_enc = asm_pop(line)
         case 'CALL':
-            program.append(asm_call(line))
+            bin_enc = asm_call(line)
         case 'RET':
-            program.append(asm_ret(line))
+            bin_enc = asm_ret(line)
         case 'JMP':
-            program.append(asm_jmp(line))
+            bin_enc = asm_jmp(line)
         case 'JMPZ':
-            program.append(asm_jmpz(line))
+            bin_enc = asm_jmpz(line)
         case 'JMPNZ':
-            program.append(asm_jmpnz(line))
+            bin_enc = asm_jmpnz(line)
         case 'JMPEQ':
-            program.append(asm_jmpeq(line))
+            bin_enc = asm_jmpeq(line)
         case 'JMPNE':
-            program.append(asm_jmpne(line))
+            bin_enc = asm_jmpne(line)
         case 'JMPGT':
-            program.append(asm_jmpgt(line))
+            bin_enc = asm_jmpgt(line)
         case 'JMPLT':
-            program.append(asm_jmplt(line))
+            bin_enc = asm_jmplt(line)
         case 'JMPGE':
-            program.append(asm_jmpge(line))
+            bin_enc = asm_jmpge(line)
         case 'JMPLE':
-            program.append(asm_jmple(line))
+            bin_enc = asm_jmple(line)
         case 'INVOKE':
-            program.append(asm_invoke(line))
+            bin_enc = asm_invoke(line)
         case _:
             sys.exit(f"Unknown instruction '{instr}'.")
+    
+    program.append(bin_enc)
+
+    global program_size
+    program_size += num_bytes(bin_enc)
 
 
 def asm_label(label: str):
     global labelCurTopLevel
     if is_high_level_label(label):
         labelCurTopLevel = label
-    labelAddr[mangle_label(label)] = len(program)
+    labelAddr[mangle_label(label)] = program_size
 
 
 def strip_comment(line: str) -> str:
@@ -384,7 +395,7 @@ def link():
     for label, refs in labelRefs.items():
         addr = labelAddr[label]
         for ref in refs:
-            program[ref] = program[ref] | addr
+            program[ref] |= addr
 
 
 def asm_file(file: TextIO):
@@ -394,8 +405,11 @@ def asm_file(file: TextIO):
 
 
 def dump_program():
-    for idx, instr in enumerate(program):
-        print(f"{idx:04}   0x{instr:012x}")
+    for bin_enc in program:
+        hex_enc = f"{bin_enc:x}"
+        if len(hex_enc) % 2 == 1:
+            hex_enc = '0' + hex_enc
+        print(' '.join([hex_enc[i:i+2] for i in range(0, len(hex_enc), 2)]))
 
 
 asm_file(sys.stdin)
