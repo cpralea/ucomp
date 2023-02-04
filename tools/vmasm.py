@@ -1,9 +1,20 @@
-from math import ceil
+import argparse
 import re
 import sys
 
 from enum import IntEnum
+from math import ceil
 from typing import Callable, Dict, List, Optional, TextIO
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description='VM assembler.')
+    parser.add_argument('-o', '--output', metavar='OUTPUT', type=str, dest='output_file', \
+                        required=False, \
+                        help='output file to emit; defaults to STDOUT if unspecified')
+    parser.add_argument('input_file', metavar='INPUT', type=str, nargs='?', \
+                        help='input file to process; defaults to STDIN if unspecified')
+    return parser.parse_args()
 
 
 class Instruction(IntEnum):
@@ -398,19 +409,35 @@ def link():
             program[ref] |= addr
 
 
-def asm_file(file: TextIO):
-    for line in file:
+def asm_file(input: TextIO):
+    for line in input:
         asm_line(line)
     link()
 
 
-def dump_program():
+def dump_program(output: TextIO):
     for bin_enc in program:
         hex_enc = f"{bin_enc:x}"
         if len(hex_enc) % 2 == 1:
             hex_enc = '0' + hex_enc
-        print(' '.join([hex_enc[i:i+2] for i in range(0, len(hex_enc), 2)]))
+        print(' '.join([hex_enc[i:i+2] for i in range(0, len(hex_enc), 2)]), file=output)
 
 
-asm_file(sys.stdin)
-dump_program()
+def assemble():
+    args = parse_args()
+
+    input_file: TextIO = sys.stdin
+    output_file: TextIO = sys.stdout
+
+    if args.input_file is not None:
+        input_file = open(args.input_file, mode='r', encoding='utf-8') # type: ignore
+    if args.output_file is not None:
+        output_file = open(args.output_file, mode='w', encoding='utf-8') # type: ignore
+
+    with output_file as output:
+        with input_file as input:
+            asm_file(input)
+            dump_program(output)
+
+
+assemble()
