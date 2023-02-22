@@ -2,70 +2,20 @@ import argparse
 import re
 import sys
 
-from enum import IntEnum
 from math import ceil
 from typing import Callable, Dict, List, Optional, TextIO
+
+from vm import Instruction, RegImm, Register
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='VM assembler.')
+    parser.add_argument('input_file', metavar='INPUT', type=str, nargs='?', \
+                        help='input file to process; defaults to STDIN if unspecified')
     parser.add_argument('-o', '--output', metavar='OUTPUT', type=str, dest='output_file', \
                         required=False, \
                         help='output file to emit; defaults to STDOUT if unspecified')
-    parser.add_argument('input_file', metavar='INPUT', type=str, nargs='?', \
-                        help='input file to process; defaults to STDIN if unspecified')
     return parser.parse_args()
-
-
-class Instruction(IntEnum):
-    LOAD    =  1
-    STORE   =  2
-    MOV     =  3
-    ADD     =  4
-    SUB     =  5
-    AND     =  6
-    OR      =  7
-    XOR     =  8
-    NOT     =  9
-    CMP     = 10
-    PUSH    = 11
-    POP     = 12
-    CALL    = 13
-    RET     = 14
-    JMP     = 15
-    JMPZ    = 16
-    JMPNZ   = 17
-    JMPEQ   = 18
-    JMPNE   = 19
-    JMPGT   = 20
-    JMPLT   = 21
-    JMPGE   = 22
-    JMPLE   = 23
-    INVOKE  = 24
-
-
-class RegImm(IntEnum):
-    REG     =  0
-    IMM     =  1
-
-
-class Register(IntEnum):
-    R0      =  0
-    R1      =  1
-    R2      =  2
-    R3      =  3
-    R4      =  4
-    R5      =  5
-    R6      =  6
-    R7      =  7
-    R8      =  8
-    R9      =  9
-    R10     = 10
-    R11     = 11
-    R12     = 12
-    R13     = 13
-    SP      = 14
-    PC      = 15
 
 
 regex_imm_hex               = re.compile(r'^(0x[0-9a-fA-F]+)$')
@@ -386,7 +336,7 @@ def strip_whitespaces(line: str) -> str:
 def asm_line(line: str):
     line = strip_comment(line)
     line = strip_whitespaces(line)
-    if len(line) == 0:
+    if not line:
         return
 
     m_label = regex_label.match(line)

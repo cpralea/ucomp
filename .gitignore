@@ -1,3 +1,5 @@
 .vscode
 *.code-workspace
 env/python
+tools/__pycache__
+
