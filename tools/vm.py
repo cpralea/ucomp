@@ -30,6 +30,8 @@ class Instruction(IntEnum):
 
     def __repr__(self) -> str:
         return self.name
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 @unique
@@ -39,6 +41,8 @@ class RegImm(IntEnum):
 
     def __repr__(self) -> str:
         return self.name
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 @unique
@@ -62,3 +66,5 @@ class Register(IntEnum):
 
     def __repr__(self) -> str:
         return self.name
+    def __str__(self) -> str:
+        return self.__repr__()

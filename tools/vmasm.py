@@ -52,6 +52,8 @@ def mangle_label(label: str) -> str:
     return label if is_high_level_label(label) else f"{labelCurTopLevel}{label}"
 
 
+def gen_i(imm: int) -> int:
+    return imm
 def gen_opcode(instr: Instruction, ri: RegImm) -> int:
     return (instr << 1) + ri
 def gen_instr(instr: Instruction) -> int:
@@ -59,15 +61,13 @@ def gen_instr(instr: Instruction) -> int:
 def gen_rr(dst: Register, src: Register) -> int:
     return (dst << 4) + src
 def gen_ri(reg: Register, imm: int) -> int:
-    return ((reg << 4) << 32) + imm
+    return ((reg << 4) << 32) + gen_i(imm)
 def gen_instr_rr(instr: Instruction, dst: Register, src: Register) -> int:
     return (gen_opcode(instr, RegImm.REG) << 8) + gen_rr(dst, src)
 def gen_instr_ri(instr: Instruction, dst: Register, src: int) -> int:
     return (gen_opcode(instr, RegImm.IMM) << 40) + gen_ri(dst, src)
 def gen_r(reg: Register) -> int:
     return reg << 4
-def gen_i(imm: int) -> int:
-    return imm
 def gen_instr_r(instr: Instruction, reg: Register) -> int:
     return (gen_opcode(instr, RegImm.REG) << 8) + gen_r(reg)
 def gen_instr_i(instr: Instruction, imm: int) -> int:
@@ -112,6 +112,10 @@ def gen_push_r(reg: Register) -> int:
     return gen_instr_r(Instruction.PUSH, reg)
 def gen_pop_r(reg: Register) -> int:
     return gen_instr_r(Instruction.POP, reg)
+def gen_call_i(imm: int) -> int:
+    return gen_instr_i(Instruction.CALL, imm)
+def gen_ret() -> int:
+    return gen_instr(Instruction.RET)
 def gen_jmp_i(imm: int) -> int:
     return gen_instr_i(Instruction.JMP, imm)
 def gen_jmpz_i(imm: int) -> int:
@@ -130,10 +134,6 @@ def gen_jmpge_i(imm: int) -> int:
     return gen_instr_i(Instruction.JMPGE, imm)
 def gen_jmple_i(imm: int) -> int:
     return gen_instr_i(Instruction.JMPLE, imm)
-def gen_call_i(imm: int) -> int:
-    return gen_instr_i(Instruction.CALL, imm)
-def gen_ret() -> int:
-    return gen_instr(Instruction.RET)
 def gen_invoke_i(imm: int) -> int:
     return gen_instr_i(Instruction.INVOKE, imm)
 
