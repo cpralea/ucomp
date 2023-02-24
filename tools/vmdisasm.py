@@ -32,6 +32,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def unpack_opcode(hex_byte: str) -> Tuple[Instruction, RegImm]:
+    instr: Instruction = Instruction((int(hex_byte, base=16) & ~0x01) >> 1)
+    ri: RegImm = RegImm(int(hex_byte, base=16) & 0x01)
+    return instr, ri
+
+
 def load_hex_bytes(input: TextIO):
     if hex_bytes_buffer != []:
         return
@@ -49,33 +55,11 @@ def peek_hex_byte(input: TextIO) -> str:
     return hex_bytes_buffer[0]
 
 
-def get_hex_byte(input: TextIO) -> str:
-    hex_byte: str = peek_hex_byte(input)
-    if hex_byte:
-        hex_bytes_buffer.pop(0)
-    return hex_byte
-
-
-def unpack_opcode(hex_byte: str) -> Tuple[Instruction, RegImm]:
-    instr: Instruction = Instruction((int(hex_byte, base=16) & ~0x01) >> 1)
-    ri: RegImm = RegImm(int(hex_byte, base=16) & 0x01)
-    return instr, ri
-
-
-def unpack_reg_reg(hex_byte: str) -> Tuple[Register, Register]:
-    rr: int = int(hex_byte, base=16)
-    return Register(rr >> 4), Register(rr & 0x0f)
-
-
 def peek_opcode(input: TextIO) -> Tuple[Instruction, RegImm] | None:
     hex_byte: str = peek_hex_byte(input)
     if not hex_byte:
         return None
     return unpack_opcode(hex_byte)
-
-
-def disasm_opcode(input: TextIO) -> Tuple[Instruction, RegImm]:
-    return unpack_opcode(get_hex_byte(input))
 
 
 def peek_instr(input: TextIO) -> Instruction | None:
@@ -84,6 +68,22 @@ def peek_instr(input: TextIO) -> Instruction | None:
         return None
     instr, _ = opcode
     return instr
+
+
+def get_hex_byte(input: TextIO) -> str:
+    hex_byte: str = peek_hex_byte(input)
+    if hex_byte:
+        hex_bytes_buffer.pop(0)
+    return hex_byte
+
+
+def disasm_opcode(input: TextIO) -> Tuple[Instruction, RegImm]:
+    return unpack_opcode(get_hex_byte(input))
+
+
+def disasm_reg_reg(input: TextIO) -> Tuple[Register, Register]:
+    rr: int = int(get_hex_byte(input), base=16)
+    return Register(rr >> 4), Register(rr & 0x0f)
 
 
 def disasm_imm(input: TextIO) -> int:
@@ -96,20 +96,28 @@ def disasm_imm(input: TextIO) -> int:
 def disasm_instr(input: TextIO) -> VMInstrData:
     instr, ri = disasm_opcode(input)
     return VMInstrData(instr, ri, len=1)
+
+
 def disasm_instr_r(input: TextIO) -> VMInstrData:
     instr, ri = disasm_opcode(input)
-    dst, _ = unpack_reg_reg(get_hex_byte(input))
+    dst, _ = disasm_reg_reg(input)
     return VMInstrData(instr, ri, dst=dst, len=2)
+
+
 def disasm_instr_i(input: TextIO) -> VMInstrData:
     instr, ri = disasm_opcode(input)
     return VMInstrData(instr, ri, dst=disasm_imm(input), len=5)
+
+
 def disasm_instr_rr(input: TextIO) -> VMInstrData:
     instr, ri = disasm_opcode(input)
-    dst, src = unpack_reg_reg(get_hex_byte(input))
+    dst, src = disasm_reg_reg(input)
     return VMInstrData(instr, ri, dst=dst, src=src, len=2)
+
+
 def disasm_instr_ri(input: TextIO) -> VMInstrData:
     instr, ri = disasm_opcode(input)
-    dst, _ = unpack_reg_reg(get_hex_byte(input))
+    dst, _ = disasm_reg_reg(input)
     return VMInstrData(instr, ri, dst=dst, src=disasm_imm(input), len=6)
 
 
