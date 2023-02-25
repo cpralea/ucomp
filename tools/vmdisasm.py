@@ -13,6 +13,7 @@ class VMInstrData:
     ri: RegImm
     dst: Register | int | None  = None
     src: Register | int | None  = None
+    label: str | None           = None
     len: int                    = 0
 
 
@@ -20,6 +21,9 @@ hex_bytes_buffer: List[str] = []
 
 cur_addr: int = 0
 program: Dict[int, VMInstrData] = {}
+
+label_prefix: str = '.l'
+cur_label_idx: int = -1
 
 
 def parse_args() -> argparse.Namespace:
@@ -239,6 +243,22 @@ def disasm_instruction(input: TextIO) -> VMInstrData | None:
             sys.exit(f"Instruction '{instr}' not supported yet.")
 
 
+def apply_labels():
+    targets: List[Tuple[int, VMInstrData]] = []
+
+    for addr, data in program.items():
+        if data.ri == RegImm.IMM and isinstance(data.dst, int) and data.dst in program.keys():
+            target: VMInstrData = program[data.dst]
+            if target.label is None:
+                target.label = '__tmp__'
+                targets.append((addr, target))
+    
+    for t in sorted(targets, key=lambda t: t[0]):
+        global cur_label_idx
+        cur_label_idx += 1
+        t[1].label = f"{label_prefix}{cur_label_idx}"
+
+
 def disasm_file(input: TextIO):
     global cur_addr
     instr_data: VMInstrData | None = disasm_instruction(input)
@@ -246,11 +266,32 @@ def disasm_file(input: TextIO):
         program[cur_addr] = instr_data
         cur_addr += instr_data.len
         instr_data = disasm_instruction(input)
+    apply_labels()
 
 
 def dump_program(output: TextIO):
-    from pprint import PrettyPrinter
-    PrettyPrinter().pprint(program)
+    for _, data in program.items():
+
+        instr: Instruction = data.instr
+        dst: Register | int | str | None = \
+            program[data.dst].label     if isinstance(data.dst, int) and data.dst in program.keys() else \
+            data.dst                    if isinstance(data.dst, int) or isinstance(data.dst, Register) else \
+            None
+        src: Register | int | None = \
+            data.src                    if isinstance(data.src, Register) or isinstance(data.src, int) else \
+            None
+
+        asm: str = ''
+        if data.label is not None:
+            asm += f"{data.label}\n"
+        asm += f"    {instr}"
+        if dst is not None:
+            asm += f" {dst}"
+        if src is not None:
+            asm += f", {src}"
+
+        print(asm.lower())
+
 
 
 def disassemble():
