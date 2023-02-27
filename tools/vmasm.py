@@ -386,11 +386,11 @@ def assemble():
     labels_file: TextIO | None = None
 
     if args.input_file is not None:
-        input_file = open(args.input_file, mode='r', encoding='utf-8') # type: ignore
+        input_file = open(args.input_file, mode='r', encoding='utf-8')      # type: ignore
     if args.output_file is not None:
-        output_file = open(args.output_file, mode='w', encoding='utf-8') # type: ignore
+        output_file = open(args.output_file, mode='w', encoding='utf-8')    # type: ignore
     if args.labels_file is not None:
-        labels_file = open(args.labels_file, mode='w', encoding='utf-8') # type: ignore
+        labels_file = open(args.labels_file, mode='w', encoding='utf-8')    # type: ignore
 
     with output_file as output:
         with input_file as input:
