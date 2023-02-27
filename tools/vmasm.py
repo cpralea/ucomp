@@ -33,9 +33,9 @@ regex_generic_instr_op      = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*$')
 low_level_label_start: str = '.'
 sys_level_label_start: str = '$'
 
-labelCurTopLevel: str = 'entry'
-labelRefs: Dict[str, List[int]] = {}
-labelAddr: Dict[str, int] = {
+label_cur_top_level: str = 'entry'
+label_refs: Dict[str, List[int]] = {}
+label_addr: Dict[str, int] = {
     "$vm_exit" : 0xffffff00 | 0
 }
 
@@ -52,7 +52,7 @@ def is_sys_level_label(label: str) -> bool:
 
 
 def mangle_label(label: str) -> str:
-    return label if is_high_level_label(label) else f"{labelCurTopLevel}:{label}"
+    return label if is_high_level_label(label) else f"{label_cur_top_level}:{label}"
 def demangle_label(label: str) -> List[str]:
     return label.split(':')
 
@@ -192,9 +192,9 @@ def asm_generic_instr_op(
         return gen_r(op)
 
     label = mangle_label(op.lower())
-    if label not in labelRefs:
-        labelRefs[label] = []
-    labelRefs[label].append(len(program))
+    if label not in label_refs:
+        label_refs[label] = []
+    label_refs[label].append(len(program))
 
     op = 0
     assert (gen_r is None) and (gen_i is not None)
@@ -321,10 +321,10 @@ def asm_instr(instr: str, line: str):
 
 
 def asm_label(label: str):
-    global labelCurTopLevel
+    global label_cur_top_level
     if is_high_level_label(label):
-        labelCurTopLevel = label
-    labelAddr[mangle_label(label)] = program_size
+        label_cur_top_level = label
+    label_addr[mangle_label(label)] = program_size
 
 
 def strip_comment(line: str) -> str:
@@ -358,8 +358,8 @@ def asm_line(line: str):
 
 
 def link():
-    for label, refs in labelRefs.items():
-        addr = labelAddr[label]
+    for label, refs in label_refs.items():
+        addr = label_addr[label]
         for ref in refs:
             program[ref] |= addr
 
@@ -398,7 +398,7 @@ def assemble():
             dump_program(output)
         if labels_file is not None:
             with labels_file as labels:
-                for addr, label in sorted([(a, demangle_label(l)[-1]) for (l, a) in labelAddr.items()]):
+                for addr, label in sorted([(a, demangle_label(l)[-1]) for (l, a) in label_addr.items()]):
                     print(f"{addr:>8x}   {label}", file=labels)
 
 
