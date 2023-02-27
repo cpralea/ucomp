@@ -243,6 +243,15 @@ def disasm_instruction(input: TextIO) -> VMInstrData | None:
             sys.exit(f"Instruction '{instr}' not supported yet.")
 
 
+def disasm_file(input: TextIO):
+    global cur_addr
+    instr_data: VMInstrData | None = disasm_instruction(input)
+    while instr_data is not None:
+        program[cur_addr] = instr_data
+        cur_addr += instr_data.len
+        instr_data = disasm_instruction(input)
+
+
 def apply_labels():
     targets: List[Tuple[int, VMInstrData]] = []
 
@@ -257,16 +266,6 @@ def apply_labels():
         global cur_label_idx
         cur_label_idx += 1
         t[1].label = f"{label_prefix}{cur_label_idx}"
-
-
-def disasm_file(input: TextIO):
-    global cur_addr
-    instr_data: VMInstrData | None = disasm_instruction(input)
-    while instr_data is not None:
-        program[cur_addr] = instr_data
-        cur_addr += instr_data.len
-        instr_data = disasm_instruction(input)
-    apply_labels()
 
 
 def dump_program(output: TextIO):
@@ -308,6 +307,7 @@ def disassemble():
     with output_file as output:
         with input_file as input:
             disasm_file(input)
+            apply_labels()
             dump_program(output)
 
 

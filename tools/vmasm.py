@@ -12,9 +12,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='VM assembler.')
     parser.add_argument('input_file', metavar='INPUT', type=str, nargs='?', \
                         help='input file to process; defaults to STDIN if unspecified')
-    parser.add_argument('-o', '--output', metavar='OUTPUT', type=str, dest='output_file', \
+    parser.add_argument('-o', '--output', metavar='VM_CODE', type=str, dest='output_file', \
                         required=False, \
-                        help='output file to emit; defaults to STDOUT if unspecified')
+                        help='output file to emit VM code to; defaults to STDOUT if unspecified')
+    parser.add_argument('-l', '--labels', metavar='ASM_LABELS', type=str, dest='labels_file', \
+                        required=False, \
+                        help='output file to emit assembler labels to; defaults to none if unspecified')
     return parser.parse_args()
 
 
@@ -49,7 +52,9 @@ def is_sys_level_label(label: str) -> bool:
 
 
 def mangle_label(label: str) -> str:
-    return label if is_high_level_label(label) else f"{labelCurTopLevel}{label}"
+    return label if is_high_level_label(label) else f"{labelCurTopLevel}:{label}"
+def demangle_label(label: str) -> List[str]:
+    return label.split(':')
 
 
 def gen_i(imm: int) -> int:
@@ -378,16 +383,23 @@ def assemble():
 
     input_file: TextIO = sys.stdin
     output_file: TextIO = sys.stdout
+    labels_file: TextIO | None = None
 
     if args.input_file is not None:
         input_file = open(args.input_file, mode='r', encoding='utf-8') # type: ignore
     if args.output_file is not None:
         output_file = open(args.output_file, mode='w', encoding='utf-8') # type: ignore
+    if args.labels_file is not None:
+        labels_file = open(args.labels_file, mode='w', encoding='utf-8') # type: ignore
 
     with output_file as output:
         with input_file as input:
             asm_file(input)
             dump_program(output)
+        if labels_file is not None:
+            with labels_file as labels:
+                for addr, label in sorted([(a, demangle_label(l)[-1]) for (l, a) in labelAddr.items()]):
+                    print(f"{addr:>8x}   {label}", file=labels)
 
 
 assemble()

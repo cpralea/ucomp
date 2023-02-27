@@ -38,13 +38,13 @@ def execute(cmd: str) -> bool:
     return True if process.returncode == 0 else False
 
 
-def execute_test(name: str, asm_file: str, ref_file: str, hex_file: str):
+def execute_test(name: str, vmasm: str, ref_hex: str, ref_lbl: str, out_hex: str, out_lbl: str):
     print(f"{name}...", end='')
 
-    if not execute(f"python3 $UCOMP_DEVROOT/tools/vmasm.py -o {hex_file} {asm_file}"):
+    if not execute(f"python3 $UCOMP_DEVROOT/tools/vmasm.py -o {out_hex} -l {out_lbl} {vmasm}"):
         print_red('failed')
         return
-    if not execute(f"diff {ref_file} {hex_file}"):
+    if not (execute(f"diff {ref_hex} {out_hex}") and execute(f"diff {ref_lbl} {out_lbl}")):
         print_red('failed')
         return
     
@@ -54,21 +54,24 @@ def execute_test(name: str, asm_file: str, ref_file: str, hex_file: str):
 def execute_tests():
     args: argparse.Namespace = parse_args()
 
-    asm_dir: str                            = f"{args.root_dir}/in/asm"
+    in_dir: str                             = f"{args.root_dir}/in/asm"
     ref_dir: str                            = f"{args.root_dir}/ref/asm"
-    hex_dir: str                            = create_tmpdir('vmasm2hex-')
+    out_dir: str                            = create_tmpdir('vmasm2hex-')
 
-    names: List[str]                        = [f"{file.rpartition('.')[0]}" for file in list_files(asm_dir, '.vmasm')]
-    asm_files: List[str]                    = [f"{asm_dir}/{name}.vmasm" for name in names]
-    ref_files: List[str]                    = [f"{ref_dir}/{name}.ref" for name in names]
-    hex_files: List[str]                    = [f"{hex_dir}/{name}.hex" for name in names]
+    names: List[str]                        = [f"{file.rpartition('.')[0]}" for file in list_files(in_dir, '.vmasm')]
+    in_vmasm_files: List[str]               = [f"{in_dir}/{name}.vmasm" for name in names]
+    ref_hex_files: List[str]                = [f"{ref_dir}/{name}.hex" for name in names]
+    ref_lbl_files: List[str]                = [f"{ref_dir}/{name}.lbl" for name in names]
+    out_hex_files: List[str]                = [f"{out_dir}/{name}.hex" for name in names]
+    out_lbl_files: List[str]                = [f"{out_dir}/{name}.lbl" for name in names]
 
-    tests: zip[tuple[str, str, str, str]]   = zip(names, asm_files, ref_files, hex_files)
+    tests: zip[tuple[str, str, str, str, str, str]] \
+        = zip(names, in_vmasm_files, ref_hex_files, ref_lbl_files, out_hex_files, out_lbl_files)
 
-    for name, asm_file, ref_file, hex_file in tests:
-        execute_test(name, asm_file, ref_file, hex_file)
+    for name, in_vmasm, ref_hex, ref_lbl, out_hex, out_lbl in tests:
+        execute_test(name, in_vmasm, ref_hex, ref_lbl, out_hex, out_lbl)
     
-    remove_dir(hex_dir)
+    remove_dir(out_dir)
 
 
 execute_tests()
