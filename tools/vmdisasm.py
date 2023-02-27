@@ -315,7 +315,7 @@ def dump_program(output: TextIO):
         if src is not None:
             asm += f", {src}"
 
-        print(asm.lower())
+        print(asm.lower(), file=output)
 
 
 
