@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from dataclasses import dataclass
-from typing import Dict, List, TextIO, Tuple
+from typing import Dict, List, Set, TextIO, Tuple
 
 from vm import Instruction, RegImm, Register
 
@@ -24,7 +24,9 @@ program: Dict[int, VMInstrData] = {}
 
 label_prefix: str = '.l'
 cur_label_idx: int = -1
-ext_label_data: Dict[int, str] = {}
+rev_label_addr: Dict[int, str] = {
+    0xffffff00 | 0 : "$vm_exit"
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -256,40 +258,28 @@ def disasm_file(input: TextIO):
         instr_data = disasm_instruction(input)
 
 
-def load_labels(labels: TextIO):
+def load_label_data(labels: TextIO):
     for label in labels:
         addr, label = label.strip().split('   ')
         addr = int(addr, base=16)
-        ext_label_data[addr] = label
+        rev_label_addr[addr] = label
 
 
-def apply_external_labels():
+def compute_label_data():
+    addrs: Set[int] = set()
     for addr, data in program.items():
-        if addr in ext_label_data.keys():
-            data.label = ext_label_data[addr]
-
-
-def apply_internal_labels():
-    targets: List[Tuple[int, VMInstrData]] = []
-
-    for addr, data in program.items():
-        if data.ri == RegImm.IMM and isinstance(data.dst, int) and data.dst in program.keys():
-            target: VMInstrData = program[data.dst]
-            if target.label is None:
-                target.label = '__tmp__'
-                targets.append((addr, target))
-    
-    for t in sorted(targets, key=lambda t: t[0]):
+        if data.ri == RegImm.IMM and type(data.dst) == int and data.dst in program.keys():
+            addrs.add(data.dst) # type: ignore
+    for addr in sorted(addrs):
         global cur_label_idx
         cur_label_idx += 1
-        t[1].label = f"{label_prefix}{cur_label_idx}"
+        rev_label_addr[addr] = f"{label_prefix}{cur_label_idx}"
 
 
-def apply_labels():
-    if ext_label_data:
-        apply_external_labels()
-    else:
-        apply_internal_labels()
+def apply_label_data():
+    for addr, data in program.items():
+        if addr in rev_label_addr.keys():
+            data.label = rev_label_addr[addr]
 
 
 def dump_program(output: TextIO):
@@ -299,9 +289,9 @@ def dump_program(output: TextIO):
         dst: Register | int | str | None    = None
         src: Register | int | None          = None
 
-        if type(data.dst) == int and data.dst in program.keys():
-            dst = program[data.dst].label  # type: ignore
-        elif type(data.dst) == int or type(data.dst) == Register:
+        if type(data.dst) == int:
+            dst = rev_label_addr[data.dst]                                  # type: ignore
+        elif type(data.dst) == Register:
             dst = data.dst
         if type(data.src) == int or type(data.src) == Register:
             src = data.src
@@ -327,19 +317,21 @@ def disassemble():
     labels_file: TextIO | None = None
 
     if args.input_file is not None:
-        input_file = open(args.input_file, mode='r', encoding='utf-8') # type: ignore
+        input_file = open(args.input_file, mode='r', encoding='utf-8')      # type: ignore
     if args.output_file is not None:
-        output_file = open(args.output_file, mode='w', encoding='utf-8') # type: ignore
+        output_file = open(args.output_file, mode='w', encoding='utf-8')    # type: ignore
     if args.labels_file is not None:
-        labels_file = open(args.labels_file, mode='r', encoding='utf-8') # type: ignore
+        labels_file = open(args.labels_file, mode='r', encoding='utf-8')    # type: ignore
 
     with output_file as output:
         with input_file as input:
             disasm_file(input)
             if labels_file is not None:
                 with labels_file as labels:
-                    load_labels(labels)
-            apply_labels()
+                    load_label_data(labels)
+            else:
+                compute_label_data()
+            apply_label_data()
             dump_program(output)
 
 
