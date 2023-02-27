@@ -100,7 +100,7 @@ def disasm_imm(input: TextIO) -> int:
     hex_bytes: List[str] = []
     for _ in range(4):
         hex_bytes.append(get_hex_byte(input))
-    return int(''.join(hex_bytes), base=16)
+    return int(''.join(reversed(hex_bytes)), base=16)
 
 
 def disasm_instr(input: TextIO) -> VMInstrData:

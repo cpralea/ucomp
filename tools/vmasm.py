@@ -58,7 +58,11 @@ def demangle_label(label: str) -> List[str]:
 
 
 def gen_i(imm: int) -> int:
-    return imm
+    big_endian: str = f"{imm:0>8x}"
+    little_endian: str = ''.join(reversed([big_endian[i:i+2] for i in range(0, len(big_endian), 2)]))
+    return int(little_endian, base=16)
+
+
 def gen_opcode(instr: Instruction, ri: RegImm) -> int:
     return (instr << 1) + ri
 def gen_instr(instr: Instruction) -> int:
@@ -361,7 +365,7 @@ def link():
     for label, refs in label_refs.items():
         addr = label_addr[label]
         for ref in refs:
-            program[ref] |= addr
+            program[ref] |= gen_i(addr)
 
 
 def asm_file(input: TextIO):
