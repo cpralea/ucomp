@@ -24,6 +24,7 @@ program: Dict[int, VMInstrData] = {}
 
 label_prefix: str = '.l'
 cur_label_idx: int = -1
+ext_label_data: Dict[int, str] = {}
 
 
 def parse_args() -> argparse.Namespace:
@@ -255,7 +256,20 @@ def disasm_file(input: TextIO):
         instr_data = disasm_instruction(input)
 
 
-def apply_labels():
+def load_labels(labels: TextIO):
+    for label in labels:
+        addr, label = label.strip().split('   ')
+        addr = int(addr, base=16)
+        ext_label_data[addr] = label
+
+
+def apply_external_labels():
+    for addr, data in program.items():
+        if addr in ext_label_data.keys():
+            data.label = ext_label_data[addr]
+
+
+def apply_internal_labels():
     targets: List[Tuple[int, VMInstrData]] = []
 
     for addr, data in program.items():
@@ -271,21 +285,30 @@ def apply_labels():
         t[1].label = f"{label_prefix}{cur_label_idx}"
 
 
+def apply_labels():
+    if ext_label_data:
+        apply_external_labels()
+    else:
+        apply_internal_labels()
+
+
 def dump_program(output: TextIO):
     for _, data in program.items():
 
-        instr: Instruction = data.instr
-        dst: Register | int | str | None = \
-            program[data.dst].label     if isinstance(data.dst, int) and data.dst in program.keys() else \
-            data.dst                    if isinstance(data.dst, int) or isinstance(data.dst, Register) else \
-            None
-        src: Register | int | None = \
-            data.src                    if isinstance(data.src, Register) or isinstance(data.src, int) else \
-            None
+        instr: Instruction                  = data.instr
+        dst: Register | int | str | None    = None
+        src: Register | int | None          = None
+
+        if type(data.dst) == int and data.dst in program.keys():
+            dst = program[data.dst].label  # type: ignore
+        elif type(data.dst) == int or type(data.dst) == Register:
+            dst = data.dst
+        if type(data.src) == int or type(data.src) == Register:
+            src = data.src
 
         asm: str = ''
         if data.label is not None:
-            asm += f"{data.label}\n"
+            asm += f"{data.label}:\n"
         asm += f"    {instr}"
         if dst is not None:
             asm += f" {dst}"
@@ -301,15 +324,21 @@ def disassemble():
 
     input_file: TextIO = sys.stdin
     output_file: TextIO = sys.stdout
+    labels_file: TextIO | None = None
 
     if args.input_file is not None:
         input_file = open(args.input_file, mode='r', encoding='utf-8') # type: ignore
     if args.output_file is not None:
         output_file = open(args.output_file, mode='w', encoding='utf-8') # type: ignore
+    if args.labels_file is not None:
+        labels_file = open(args.labels_file, mode='r', encoding='utf-8') # type: ignore
 
     with output_file as output:
         with input_file as input:
             disasm_file(input)
+            if labels_file is not None:
+                with labels_file as labels:
+                    load_labels(labels)
             apply_labels()
             dump_program(output)
 
