@@ -290,7 +290,11 @@ def dump_program(output: TextIO):
         src: Register | int | None          = None
 
         if type(data.dst) == int:
-            dst = rev_label_addr[data.dst]                                  # type: ignore
+            addr: int = data.dst                                            # type: ignore
+            if addr in program.keys():
+                dst = program[addr].label
+            elif addr in rev_label_addr.keys():
+                dst = rev_label_addr[addr]
         elif type(data.dst) == Register:
             dst = data.dst
         if type(data.src) == int or type(data.src) == Register:
