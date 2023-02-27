@@ -28,11 +28,14 @@ cur_label_idx: int = -1
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='VM disassembler.')
-    parser.add_argument('input_file', metavar='INPUT', type=str, nargs='?', \
+    parser.add_argument('input_file', metavar='HEX', type=str, nargs='?', \
                         help='input file to process; defaults to STDIN if unspecified')
-    parser.add_argument('-o', '--output', metavar='OUTPUT', type=str, dest='output_file', \
+    parser.add_argument('-o', '--output', metavar='ASM', type=str, dest='output_file', \
                         required=False, \
-                        help='output file to emit; defaults to STDOUT if unspecified')
+                        help='output file to emit VM asm to; defaults to STDOUT if unspecified')
+    parser.add_argument('-l', '--labels', metavar='LBL', type=str, dest='labels_file', \
+                        required=False, \
+                        help='input file containing assembler labels; defaults to none if unspecified')
     return parser.parse_args()
 
 

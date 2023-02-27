@@ -10,12 +10,12 @@ from vm import Instruction, RegImm, Register
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='VM assembler.')
-    parser.add_argument('input_file', metavar='INPUT', type=str, nargs='?', \
+    parser.add_argument('input_file', metavar='ASM', type=str, nargs='?', \
                         help='input file to process; defaults to STDIN if unspecified')
-    parser.add_argument('-o', '--output', metavar='VM_CODE', type=str, dest='output_file', \
+    parser.add_argument('-o', '--output', metavar='HEX', type=str, dest='output_file', \
                         required=False, \
                         help='output file to emit VM code to; defaults to STDOUT if unspecified')
-    parser.add_argument('-l', '--labels', metavar='ASM_LABELS', type=str, dest='labels_file', \
+    parser.add_argument('-l', '--labels', metavar='LBL', type=str, dest='labels_file', \
                         required=False, \
                         help='output file to emit assembler labels to; defaults to none if unspecified')
     return parser.parse_args()
