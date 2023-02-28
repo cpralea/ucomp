@@ -2,7 +2,7 @@ import argparse
 
 from typing import List
 
-from tvm import *
+from utils import *
 
 
 def parse_args() -> argparse.Namespace:

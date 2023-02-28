@@ -1,4 +1,4 @@
-from tvm import execute
+from utils import execute
 
 
 execute('python3 $UCOMP_DEVROOT/tests/bin/tvmasm.py')
