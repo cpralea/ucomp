@@ -12,11 +12,6 @@
 
 
 
-$sys_enter:
-    jmp $sys_enter
-
-
-
 main:
     ; push 5 on stack
     mov r0, 5

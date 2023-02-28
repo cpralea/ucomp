@@ -17,13 +17,14 @@ class VMInstrData:
     len: int                    = 0
 
 
+LABEL_PREFIX: str = '.l'
+
 hex_bytes_buffer: List[str] = []
 
 cur_addr: int = 0
 program: Dict[int, VMInstrData] = {}
 
-label_prefix: str = '.l'
-cur_label_idx: int = -1
+cur_label_idx: int = 0
 rev_label_addr: Dict[int, str] = {}
 
 
@@ -267,7 +268,7 @@ def compute_label_data():
     for addr in sorted(addrs):
         global cur_label_idx
         cur_label_idx += 1
-        rev_label_addr[addr] = f"{label_prefix}{cur_label_idx}"
+        rev_label_addr[addr] = f"{LABEL_PREFIX}{cur_label_idx}"
 
 
 def apply_label_data():

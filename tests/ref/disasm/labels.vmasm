@@ -1,3 +1,5 @@
+$sys_enter:
+    jmp $sys_enter
 .l1:
     jmp .l1
     jmp .l2

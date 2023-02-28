@@ -1,4 +1,5 @@
 import argparse
+import io
 import re
 import sys
 
@@ -21,14 +22,19 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-regex_imm_hex               = re.compile(r'^(0x[0-9a-fA-F]+)$')
-regex_imm_dec               = re.compile(r'^([0-9]+)$')
-regex_label                 = re.compile(r'^(.+):$')
-regex_instr                 = re.compile(r'^([a-zA-Z]+).*$')
-regex_load                  = re.compile(r'^LOAD\s+([^\s]+)\s*,\s*\[([^\s]+)\]$')
-regex_store                 = re.compile(r'^STORE\s+\[([^\s]+)\]\s*,\s*([^\s]+)$')
-regex_generic_instr_dst_src = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*,\s*([^\s]+)$')
-regex_generic_instr_op      = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*$')
+SYS_ENTER_VMASM = io.StringIO("""
+    $sys_enter:
+        jmp $sys_enter
+""")
+
+REGEX_IMM_HEX               = re.compile(r'^(0x[0-9a-fA-F]+)$')
+REGEX_IMM_DEC               = re.compile(r'^([0-9]+)$')
+REGEX_LABEL                 = re.compile(r'^(.+):$')
+REGEX_INSTR                 = re.compile(r'^([a-zA-Z]+).*$')
+REGEX_LOAD                  = re.compile(r'^LOAD\s+([^\s]+)\s*,\s*\[([^\s]+)\]$')
+REGEX_STORE                 = re.compile(r'^STORE\s+\[([^\s]+)\]\s*,\s*([^\s]+)$')
+REGEX_GENERIC_INSTR_DST_SRC = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*,\s*([^\s]+)$')
+REGEX_GENERIC_INSTR_OP      = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*$')
 
 low_level_label_start: str = '.'
 label_cur_top_level: str = 'n/a'
@@ -151,9 +157,9 @@ def asm_generic_instr_dst_src(
 
     dst, src = Register[m.group(1).upper()], m.group(2).upper()
 
-    m = regex_imm_dec.match(src)
+    m = REGEX_IMM_DEC.match(src)
     if m is None:
-        m = regex_imm_hex.match(src)
+        m = REGEX_IMM_HEX.match(src)
     if m is not None:
         src = int(src)
         return gen_ri(dst, src)
@@ -174,9 +180,9 @@ def asm_generic_instr_op(
     
     op = m.group(1).upper()
     
-    m = regex_imm_dec.match(op)
+    m = REGEX_IMM_DEC.match(op)
     if m is None:
-        m = regex_imm_hex.match(op)
+        m = REGEX_IMM_HEX.match(op)
     if m is not None:
         op = int(op)
         assert (gen_r is None) and (gen_i is not None)
@@ -198,57 +204,57 @@ def asm_generic_instr_op(
 
 
 def asm_load(line: str) -> int:
-    m = regex_load.match(line.upper())
+    m = REGEX_LOAD.match(line.upper())
     assert m is not None
     dst, src = Register[m.group(1).upper()], Register[m.group(2).upper()]
     return gen_load_rr(dst, src)
 def asm_store(line: str) -> int:
-    m = regex_store.match(line.upper())
+    m = REGEX_STORE.match(line.upper())
     assert m is not None
     dst, src = Register[m.group(1).upper()], Register[m.group(2).upper()]
     return gen_store_rr(dst, src)
 def asm_mov(line: str) -> int:
-    return asm_generic_instr_dst_src(line, regex_generic_instr_dst_src, gen_mov_rr, gen_mov_ri)
+    return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_mov_rr, gen_mov_ri)
 def asm_add(line: str) -> int:
-    return asm_generic_instr_dst_src(line, regex_generic_instr_dst_src, gen_add_rr, gen_add_ri)
+    return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_add_rr, gen_add_ri)
 def asm_sub(line: str) -> int:
-    return asm_generic_instr_dst_src(line, regex_generic_instr_dst_src, gen_sub_rr, gen_sub_ri)
+    return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_sub_rr, gen_sub_ri)
 def asm_and(line: str) -> int:
-    return asm_generic_instr_dst_src(line, regex_generic_instr_dst_src, gen_and_rr, gen_and_ri)
+    return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_and_rr, gen_and_ri)
 def asm_or(line: str) -> int:
-    return asm_generic_instr_dst_src(line, regex_generic_instr_dst_src, gen_or_rr, gen_or_ri)
+    return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_or_rr, gen_or_ri)
 def asm_xor(line: str) -> int:
-    return asm_generic_instr_dst_src(line, regex_generic_instr_dst_src, gen_xor_rr, gen_xor_ri)
+    return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_xor_rr, gen_xor_ri)
 def asm_not(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, gen_not_r, None)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, gen_not_r, None)
 def asm_cmp(line: str) -> int:
-    return asm_generic_instr_dst_src(line, regex_generic_instr_dst_src, gen_cmp_rr, gen_cmp_ri)
+    return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_cmp_rr, gen_cmp_ri)
 def asm_push(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, gen_push_r, None)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, gen_push_r, None)
 def asm_pop(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, gen_pop_r, None)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, gen_pop_r, None)
 def asm_call(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_call_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_call_i)
 def asm_ret(line: str) -> int:
     return gen_ret()
 def asm_jmp(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmp_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmp_i)
 def asm_jmpz(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmpz_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmpz_i)
 def asm_jmpnz(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmpnz_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmpnz_i)
 def asm_jmpeq(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmpeq_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmpeq_i)
 def asm_jmpne(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmpne_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmpne_i)
 def asm_jmpgt(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmpgt_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmpgt_i)
 def asm_jmplt(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmplt_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmplt_i)
 def asm_jmpge(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmpge_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmpge_i)
 def asm_jmple(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmple_i)
+    return asm_generic_instr_op(line, REGEX_GENERIC_INSTR_OP, None, gen_jmple_i)
 
 
 def num_bytes(bin_enc: int) -> int:
@@ -336,13 +342,13 @@ def asm_line(line: str):
     if not line:
         return
 
-    m_label = regex_label.match(line)
+    m_label = REGEX_LABEL.match(line)
     if m_label is not None:
         label = m_label.group(1)
         asm_label(label)
         return
     
-    m_instr = regex_instr.match(line)
+    m_instr = REGEX_INSTR.match(line)
     if m_instr is not None:
         instr = m_instr.group(1)
         asm_instr(instr, line)
@@ -386,6 +392,7 @@ def assemble():
 
     with output_file as output:
         with input_file as input:
+            asm_file(SYS_ENTER_VMASM)
             asm_file(input)
             dump_program(output)
         if labels_file is not None:

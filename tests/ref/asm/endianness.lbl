@@ -1,1 +1,2 @@
-       6   .l1
+       0   $sys_enter
+       b   .l1

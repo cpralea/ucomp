@@ -4,19 +4,6 @@ Registers
     flags                                   ; program counter, stack pointer, flags
 
 
-Calling convention
-    - all parameters passed on stack; cleared by the callee
-    - all return values passed on stack; cleared by the caller
-    - no registers are preserved between calls
-
-
-Memory layout
-    0x00000000      text                        ; 1.0 GB
-    0x40000000      heap start                  ; 2.5 GB
-    0xe0000000      heap end / stack end
-    0xffffffff      stack start                 ; 0.5 GB
-
-
 Instructions
     LOAD        <reg>,      [<reg>]
     STORE       [<reg>],    <reg>
@@ -63,6 +50,12 @@ Operand encoding
     |__4 bits__|        |__4 bytes__|
 
 
+Calling convention
+    - all parameters passed on stack; cleared by the callee
+    - all return values passed on stack; cleared by the caller
+    - no registers are preserved between calls
+
+
 System calls
     Regular CALL to one predefined address:
         CALL $sys_enter
@@ -76,3 +69,12 @@ System calls
     | system call ID |
     | return address | <--- top of the stack
     |                |
+
+
+Memory layout
+    0x00000000      JMP 0xXXXXXXXX              ;  $sys_enter
+    0x00000005      text                        ; ~1.0 GB
+    0x40000000      heap start                  ;  2.5 GB
+    0xe0000000      heap end / stack end
+    0xffffffff      stack start                 ;  0.5 GB
+
