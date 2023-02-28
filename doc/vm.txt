@@ -3,16 +3,19 @@ Registers
     sp, pc                                  ; stack pointer
     flags                                   ; program counter, stack pointer, flags
 
+
 Calling convention
     - all parameters passed on stack; cleared by the callee
     - all return values passed on stack; cleared by the caller
     - no registers are preserved between calls
+
 
 Memory layout
     0x00000000      text                        ; 1.0 GB
     0x40000000      heap start                  ; 2.5 GB
     0xe0000000      heap end / stack end
     0xffffffff      stack start                 ; 0.5 GB
+
 
 Instructions
     LOAD        <reg>,      [<reg>]
@@ -37,22 +40,39 @@ Instructions
     CALL        <imm>
     RET
     JMP<cond>   <imm>
-    INVOKE      <imm>                           ; call builtin function at address <imm>
 where
     <reg>       is any register
     <imm>       is any immediate value
     [<reg>]     is the value at the memory location <reg> points to
     <cond>      n/a, Z, NZ, EQ, NE, GT, LT, GE, LE
 
+
 Instruction encoding
     |  opcode  | 1st operand    2nd operand |
     |__1 byte__|________1/4/5 bytes_________|
+
 
 Opcode encoding
     |  operation | imm/reg  |
     |___7 bits___|__1 bit __|
     |________1 byte_________|
 
+
 Operand encoding
     |   reg    |        |    imm    |
     |__4 bits__|        |__4 bytes__|
+
+
+System calls
+    Regular CALL to one predefined address:
+        CALL $sys_enter
+    Parameters are passed in on the stack, as usual, with the one on top representing the system call ID.
+
+    ------------------
+    | nth parameter* |
+    |      ...       |
+    | 2nd parameter* |
+    | 1st parameter* |
+    | system call ID |
+    | return address | <--- top of the stack
+    |                |

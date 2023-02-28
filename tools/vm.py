@@ -26,7 +26,6 @@ class Instruction(IntEnum):
     JMPLT   = 21
     JMPGE   = 22
     JMPLE   = 23
-    INVOKE  = 24
 
     def __repr__(self) -> str:
         return self.name

@@ -24,9 +24,7 @@ program: Dict[int, VMInstrData] = {}
 
 label_prefix: str = '.l'
 cur_label_idx: int = -1
-rev_label_addr: Dict[int, str] = {
-    0xffffff00 | 0 : "$vm_exit"
-}
+rev_label_addr: Dict[int, str] = {}
 
 
 def parse_args() -> argparse.Namespace:
@@ -188,8 +186,6 @@ def disasm_jmpge(input: TextIO) -> VMInstrData:
     return disasm_instr_i(input)
 def disasm_jmple(input: TextIO) -> VMInstrData:
     return disasm_instr_i(input)
-def disasm_invoke(input: TextIO) -> VMInstrData:
-    return disasm_instr_i(input)
 
 
 def disasm_instruction(input: TextIO) -> VMInstrData | None:
@@ -243,8 +239,6 @@ def disasm_instruction(input: TextIO) -> VMInstrData | None:
             return disasm_jmpge(input)
         case Instruction.JMPLE:
             return disasm_jmple(input)
-        case Instruction.INVOKE:
-            return disasm_invoke(input)
         case _:
             sys.exit(f"Instruction '{instr}' not supported yet.")
 

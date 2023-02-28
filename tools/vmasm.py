@@ -31,13 +31,9 @@ regex_generic_instr_dst_src = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*,\s*([^\s]+)$
 regex_generic_instr_op      = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*$')
 
 low_level_label_start: str = '.'
-sys_level_label_start: str = '$'
-
-label_cur_top_level: str = 'entry'
+label_cur_top_level: str = 'n/a'
 label_refs: Dict[str, List[int]] = {}
-label_addr: Dict[str, int] = {
-    "$vm_exit" : 0xffffff00 | 0
-}
+label_addr: Dict[str, int] = {}
 
 program: List[int] = []
 program_size: int = 0
@@ -47,8 +43,6 @@ def is_high_level_label(label: str) -> bool:
     return not label.startswith(low_level_label_start)
 def is_low_level_label(label: str) -> bool:
     return not is_high_level_label(label)
-def is_sys_level_label(label: str) -> bool:
-    return label.startswith(sys_level_label_start)
 
 
 def mangle_label(label: str) -> str:
@@ -143,8 +137,6 @@ def gen_jmpge_i(imm: int) -> int:
     return gen_instr_i(Instruction.JMPGE, imm)
 def gen_jmple_i(imm: int) -> int:
     return gen_instr_i(Instruction.JMPLE, imm)
-def gen_invoke_i(imm: int) -> int:
-    return gen_instr_i(Instruction.INVOKE, imm)
 
 
 def asm_generic_instr_dst_src(
@@ -257,8 +249,6 @@ def asm_jmpge(line: str) -> int:
     return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmpge_i)
 def asm_jmple(line: str) -> int:
     return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_jmple_i)
-def asm_invoke(line: str) -> int:
-    return asm_generic_instr_op(line, regex_generic_instr_op, None, gen_invoke_i)
 
 
 def num_bytes(bin_enc: int) -> int:
@@ -313,8 +303,6 @@ def asm_instr(instr: str, line: str):
             bin_enc = asm_jmpge(line)
         case 'JMPLE':
             bin_enc = asm_jmple(line)
-        case 'INVOKE':
-            bin_enc = asm_invoke(line)
         case _:
             sys.exit(f"Unknown instruction '{instr}'.")
     
