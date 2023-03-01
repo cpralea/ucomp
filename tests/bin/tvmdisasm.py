@@ -31,7 +31,7 @@ def execute_tests():
 
     in_dir: str                             = f"{args.root_dir}/in/disasm"
     ref_dir: str                            = f"{args.root_dir}/ref/disasm"
-    out_dir: str                            = create_tmpdir('vmdisasm2hex-')
+    out_dir: str                            = create_tmpdir('hex2vmasm-')
 
     names: List[str]                        = [f"{file.rpartition('.')[0]}" for file in list_files(in_dir, '.hex')]
     in_hex_files: List[str]                 = [f"{in_dir}/{name}.hex" for name in names]

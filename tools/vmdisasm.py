@@ -300,9 +300,15 @@ def dump_program(output: TextIO):
             asm += f"{data.label}:\n"
         asm += f"    {instr}"
         if dst is not None:
-            asm += f" {dst}"
+            if instr == Instruction.STORE:
+                asm += f" [{dst}]"
+            else:
+                asm += f" {dst}"
         if src is not None:
-            asm += f", {src}"
+            if instr == Instruction.LOAD:
+                asm += f", [{src}]"
+            else:
+                asm += f", {src}"
 
         print(asm.lower(), file=output)
 
