@@ -13,13 +13,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def execute_test(name: str, in_vmasm: str, ref_sys_enter: str, out_hex: str, out_lbl: str, out_vmasm: str):
+def execute_test(name: str, in_vmasm: str, ref_sys_enter: str, ref_vmasm: str, out_hex: str, out_lbl: str, out_vmasm: str):
     print(f"{name}...", end='')
 
-    if not execute(f"cp {ref_sys_enter} ref.vmasm "):
+    if not execute(f"cp {ref_sys_enter} {ref_vmasm}"):
         print_red('failed')
         return
-    if not execute(f"python3 $UCOMP_DEVROOT/tests/bin/fstrip.py < {in_vmasm} >> ref.vmasm"):
+    if not execute(f"python3 $UCOMP_DEVROOT/tests/bin/fstrip.py < {in_vmasm} >> {ref_vmasm}"):
         print_red('failed')
         return
     if not execute(f"python3 $UCOMP_DEVROOT/tools/vmasm.py -o {out_hex} -l {out_lbl} {in_vmasm}"):
@@ -28,7 +28,7 @@ def execute_test(name: str, in_vmasm: str, ref_sys_enter: str, out_hex: str, out
     if not execute(f"python3 $UCOMP_DEVROOT/tools/vmdisasm.py -o {out_vmasm} -l {out_lbl} {out_hex}"):
         print_red('failed')
         return
-    if not execute(f"diff ref.vmasm {out_vmasm}"):
+    if not execute(f"diff {ref_vmasm} {out_vmasm}"):
         print_red('failed')
         return
     
@@ -49,13 +49,14 @@ def execute_tests():
     out_vmasm_files: List[str]              = [f"{out_dir}/{name}.vmasm" for name in names]
 
     ref_sys_enter: str                      = f"{ref_dir}/sys_enter.vmasm"
+    ref_vmasm: str                          = f"{out_dir}/ref.vmasm"
 
     tests: zip[tuple[str, str, str, str, str]] \
         = zip(names, in_vmasm_files, out_hex_files, out_lbl_files, out_vmasm_files)
 
     print_green("*.vmasm -> *.{hex,lbl} -> *.vmasm")
     for name, in_vmasm, out_hex, out_lbl, out_vmasm in tests:
-        execute_test(name, in_vmasm, ref_sys_enter, out_hex, out_lbl, out_vmasm)
+        execute_test(name, in_vmasm, ref_sys_enter, ref_vmasm, out_hex, out_lbl, out_vmasm)
     
     remove_dir(out_dir)
 
