@@ -6,7 +6,7 @@ import sys
 from math import ceil
 from typing import Callable, Dict, List, Optional, TextIO
 
-from vm import Instruction, RegImm, Register
+from vmspec import Instruction, RegImm, Register
 
 
 def parse_args() -> argparse.Namespace:

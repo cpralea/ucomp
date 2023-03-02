@@ -4,7 +4,7 @@ import sys
 from dataclasses import dataclass
 from typing import Dict, List, Set, TextIO, Tuple
 
-from vm import Instruction, RegImm, Register
+from vmspec import Instruction, RegImm, Register
 
 
 @dataclass
