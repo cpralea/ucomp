@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-SYS_ENTER_VMASM = io.StringIO("""
+SYS_ENTER_ASM = io.StringIO("""
     $sys_enter:
         jmp $sys_enter
 """)
@@ -392,7 +392,7 @@ def assemble():
 
     with output_file as output:
         with input_file as input:
-            asm_file(SYS_ENTER_VMASM)
+            asm_file(SYS_ENTER_ASM)
             asm_file(input)
             dump_program(output)
         if labels_file is not None:

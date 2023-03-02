@@ -1,5 +1,6 @@
 .vscode
 *.code-workspace
 env/python
-tools/__pycache__
+__pycache__
+tmp
 
