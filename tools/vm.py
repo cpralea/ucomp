@@ -2,7 +2,7 @@ import argparse
 import ctypes
 
 
-VM_LIB = 'vm/build/vm.so'
+VM_LIB = 'vm.so'
 
 
 def parse_args() -> argparse.Namespace:

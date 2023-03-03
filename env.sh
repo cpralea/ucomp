@@ -2,4 +2,4 @@ source env/python/bin/activate
 
 export UCOMP_DEVROOT=~/work/ucomp
 export PYTHONDONTWRITEBYTECODE=1
-
+export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:$UCOMP_DEVROOT/vm/build
