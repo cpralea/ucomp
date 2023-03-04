@@ -59,7 +59,7 @@ class Register(IntEnum):
     R10     = 10
     R11     = 11
     R12     = 12
-    R13     = 13
+    FLAGS   = 13
     SP      = 14
     PC      = 15
 

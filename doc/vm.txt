@@ -1,7 +1,7 @@
 Registers
-    r0, r1, r2, ..., r13                    ; general purpose
-    sp, pc                                  ; stack pointer
-    flags                                   ; program counter, stack pointer, flags
+    r0, r1, r2, ..., r12                    ; general purpose
+    flags                                   ; flags
+    sp, pc                                  ; stack pointer, program counter
 
 
 Instructions
