@@ -14,7 +14,7 @@ Interpreter::Interpreter(const void* prog, size_t prog_size, size_t ram_size_mb,
 void Interpreter::init()
 {
     DEBUG("Initializing RAM ..." << endl);
-    ram.reset(new uint8_t[ram_size]);
+    ram = std::unique_ptr<uint8_t[]>(new uint8_t[ram_size]);
     DEBUG("\tRAM @0x" << HEX(16) << (uint64_t) ram.get() << "[0x" << HEX(8) << ram_size << "]" << endl);
 
     DEBUG("Initializing registers ..." << endl);
