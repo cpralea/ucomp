@@ -1,8 +1,15 @@
 import argparse
 import ctypes
 
+from enum import IntEnum, unique
+
 
 VM_LIB = 'vm.so'
+
+
+@unique
+class ExecType(IntEnum):
+    INTERPRETER = 1
 
 
 def parse_args() -> argparse.Namespace:
@@ -12,6 +19,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('-m', '--memory', metavar='MEM', type=str, dest='memory', \
                         required=False, default=4, \
                         help='the size of memory to use (in MiB); defaults to 4')
+    parser.add_argument('-e', '--execution-type', metavar='EXEC_TYPE', type=str, dest='exec_type', \
+                        required=False, default='INTERPRETER', \
+                        help='''the execution type; defaults to INTERPRETER;
+                                possible values: INTERPRETER''')
     return parser.parse_args()
 
 
@@ -22,8 +33,9 @@ def run():
     with open(args.program[0], mode='r', encoding='utf-8') as hex_file:
         program = bytes.fromhex(' '.join([line.strip() for line in hex_file]))
     ram_size_mb: int = args.memory
+    exec_type: ExecType = ExecType[args.exec_type.upper()]
 
-    ctypes.cdll.LoadLibrary(VM_LIB).vm_run(program, len(program), ram_size_mb)
+    ctypes.cdll.LoadLibrary(VM_LIB).vm_run(program, len(program), ram_size_mb, exec_type)
 
 
 run()
