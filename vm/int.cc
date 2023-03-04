@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "exec.h"
+#include "exe.h"
 
 
 Interpreter::Interpreter(const void* prog, size_t prog_size, size_t ram_size_mb, bool debug)

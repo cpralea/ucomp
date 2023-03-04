@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "vm.h"
-#include "exec.h"
+#include "exe.h"
 
 
 static size_t adjust_ram_size_mb(size_t ram_size_mb);
