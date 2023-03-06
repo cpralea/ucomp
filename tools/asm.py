@@ -258,7 +258,7 @@ def asm_jmple(line: str) -> int:
 
 
 def num_bytes(bin_enc: int) -> int:
-    return ceil(4 * len(f"{bin_enc:x}") / 8)
+    return ceil(len(f"{bin_enc:x}") / 2)
 
 
 def asm_instr(instr: str, line: str):
