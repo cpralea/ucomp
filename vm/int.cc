@@ -74,7 +74,10 @@ void Interpreter::exec_program()
     DISPATCH(+0);
 
     _load: {
-        std::abort();
+        dst = reg_dst(mem[reg[PC] + 1]);
+        src = reg_src(mem[reg[PC] + 1]);
+        reg[dst] = mem[reg[src]];
+        DISPATCH(+2);
     }
 
     _store: {
@@ -97,7 +100,18 @@ void Interpreter::exec_program()
     }
 
     _add: {
-        std::abort();
+        ri = reg_imm(mem[reg[PC]]);
+        dst = reg_dst(mem[reg[PC] + 1]);
+        switch (ri) {
+        case REG:
+            src = reg_src(mem[reg[PC] + 1]);
+            reg[dst] += reg[src];
+            DISPATCH(+2);
+        case IMM:
+            iv = imm_val(&mem[reg[PC] + 2]);
+            reg[dst] += iv;
+            DISPATCH(+6);
+        }
     }
 
     _sub: {
@@ -132,7 +146,10 @@ void Interpreter::exec_program()
     }
 
     _pop: {
-        std::abort();
+        dst = reg_dst(mem[reg[PC] + 1]);
+        reg[dst] = mem[reg[SP]];
+        reg[SP] += 4;
+        DISPATCH(+2);
     }
 
     _call: {
@@ -144,7 +161,9 @@ void Interpreter::exec_program()
     }
 
     _ret: {
-        std::abort();
+        reg[PC] = mem[reg[SP]];
+        reg[SP] += 4;
+        DISPATCH(+0);
     }
 
     _jmp: {
