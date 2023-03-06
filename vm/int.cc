@@ -69,15 +69,18 @@ void Interpreter::exec_program()
     };
 
     uint8_t ri, dst, src;
-    uint32_t imm;
+    uint32_t iv;
 
     DISPATCH(+0);
+
     _load: {
         std::abort();
     }
+
     _store: {
         std::abort();
     }
+
     _mov: {
         ri = reg_imm(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
@@ -87,88 +90,111 @@ void Interpreter::exec_program()
             reg[dst] = reg[src];
             DISPATCH(+2);
         case IMM:
-            imm = imm_val(&mem[reg[PC] + 2]);
-            reg[dst] = imm;
+            iv = imm_val(&mem[reg[PC] + 2]);
+            reg[dst] = iv;
             DISPATCH(+6);
         }
     }
+
     _add: {
         std::abort();
     }
+
     _sub: {
         std::abort();
     }
+
     _and: {
         std::abort();
     }
+
     _or: {
         std::abort();
     }
+
     _xor: {
         std::abort();
     }
+
     _not: {
         std::abort();
     }
+
     _cmp: {
         std::abort();
     }
+
     _push: {
         dst = reg_dst(mem[reg[PC] + 1]);
         reg[SP] -= 4;
         mem[reg[SP]] = reg[dst];
         DISPATCH(+2);
     }
+
     _pop: {
         std::abort();
     }
+
     _call: {
         reg[SP] -= 4;
         mem[reg[SP]] = reg[PC] + 5;
-        imm = imm_val(&mem[reg[PC] + 1]);
-        reg[PC] = imm;
+        iv = imm_val(&mem[reg[PC] + 1]);
+        reg[PC] = iv;
         DISPATCH(+0);
     }
+
     _ret: {
         std::abort();
     }
+
     _jmp: {
-        switch (reg[PC]) {
-        case SYS_ENTER_ADDR:
-            switch (imm_val(&mem[reg[SP] + 4])) {
+        uint32_t addr = reg[PC];
+        switch (addr) {
+        case SYS_ENTER_ADDR: {
+            uint32_t syscall_id = imm_val(&mem[reg[SP] + 4]);
+            switch (syscall_id) {
             case SYSCALL_VM_EXIT:
                 return;
             default:
                 sys_enter();
                 goto _ret;
             }
+        }
         default:
-            imm = imm_val(&mem[reg[PC] + 1]);
-            reg[PC] = imm;
+            iv = imm_val(&mem[reg[PC] + 1]);
+            reg[PC] = iv;
             DISPATCH(+0);
         }
     }
+
     _jmpz: {
         std::abort();
     }
+
     _jmpnz: {
         std::abort();
     }
+
     _jmpeq: {
         std::abort();
     }
+
     _jmpne: {
         std::abort();
     }
+
     _jmpgt: {
         std::abort();
     }
+
     _jmplt: {
         std::abort();
     }
+
     _jmpge: {
         std::abort();
     }
+
     _jmple: {
         std::abort();
     }
