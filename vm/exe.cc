@@ -3,7 +3,7 @@
 
 ExecutionEngine::ExecutionEngine(const void* prog, size_t prog_size, size_t ram_size_mb, bool debug)
 : prog(prog), prog_size(prog_size), ram_size(ram_size_mb << 20), debug(debug)
-, ram(nullptr)
+, mem(nullptr)
 {
     DEBUG("Initializing VM with:" << endl);
     DEBUG("\tprogram at " << prog << ", size " << prog_size << endl);

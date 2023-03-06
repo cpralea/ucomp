@@ -26,7 +26,7 @@ protected:
     size_t ram_size;
     bool debug;
 
-    std::unique_ptr<uint8_t[]> ram;
+    std::unique_ptr<uint8_t[]> mem;
     uint32_t reg[16];
 
     virtual void init_execution() = 0;
@@ -96,6 +96,9 @@ protected:
         IMM     =  1
     } reg_imm_t;
 
+    static const uint32_t SYS_ENTER_ADDR = 0x0;
+    static const uint32_t SYSCALL_VM_EXIT = 0;
+
     static const uint8_t OPCODE_MASK = ~0x01;
     static const uint8_t REG_IMM_MASK = 0x01;
     static const uint8_t REG_DST_MASK = 0xf0;
@@ -120,4 +123,6 @@ private:
     void load_program();
     void exec_program();
     void fini_execution();
+
+    void sys_enter();
 };

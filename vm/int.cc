@@ -6,7 +6,7 @@
 
 #define DISPATCH(OFFSET) { \
     reg[PC] += OFFSET; \
-    goto *instr_exec_handle[opcode(ram[reg[PC]])]; \
+    goto *instr_exec_handle[opcode(mem[reg[PC]])]; \
 }
 
 
@@ -19,9 +19,9 @@ Interpreter::Interpreter(const void* prog, size_t prog_size, size_t ram_size_mb,
 
 void Interpreter::init_execution()
 {
-    DEBUG("Initializing RAM ..." << endl);
-    ram = std::unique_ptr<uint8_t[]>(new uint8_t[ram_size]);
-    DEBUG("\tRAM @" << (void*) ram.get() << "[" << HEX(0, ram_size) << "]" << endl);
+    DEBUG("Initializing memory ..." << endl);
+    mem = std::unique_ptr<uint8_t[]>(new uint8_t[ram_size]);
+    DEBUG("\tMemory @" << (void*) mem.get() << "[" << HEX(0, ram_size) << "]" << endl);
 
     DEBUG("Initializing registers ..." << endl);
     std::memset(&reg, 0, sizeof reg);
@@ -33,7 +33,7 @@ void Interpreter::init_execution()
 void Interpreter::load_program()
 {
     DEBUG("Loading program ..." << endl);
-    std::memmove(ram.get(), prog, prog_size);
+    std::memmove(mem.get(), prog, prog_size);
 }
 
 
@@ -79,15 +79,15 @@ void Interpreter::exec_program()
         std::abort();
     }
     _mov: {
-        ri = reg_imm(ram[reg[PC]]);
-        dst = reg_dst(ram[reg[PC]+1]);
+        ri = reg_imm(mem[reg[PC]]);
+        dst = reg_dst(mem[reg[PC] + 1]);
         switch (ri) {
         case REG:
-            src = reg_src(ram[reg[PC]+1]);
+            src = reg_src(mem[reg[PC] + 1]);
             reg[dst] = reg[src];
             DISPATCH(+2);
         case IMM:
-            imm = imm_val(&ram[reg[PC]+2]);
+            imm = imm_val(&mem[reg[PC] + 2]);
             reg[dst] = imm;
             DISPATCH(+6);
         }
@@ -114,16 +114,18 @@ void Interpreter::exec_program()
         std::abort();
     }
     _push: {
-        dst = reg_dst(ram[reg[PC]+1]);
+        dst = reg_dst(mem[reg[PC] + 1]);
         reg[SP] -= 4;
-        ram[reg[SP]] = reg[dst];
+        mem[reg[SP]] = reg[dst];
         DISPATCH(+2);
     }
     _pop: {
         std::abort();
     }
     _call: {
-        imm = imm_val(&ram[reg[PC]+1]);
+        reg[SP] -= 4;
+        mem[reg[SP]] = reg[PC] + 5;
+        imm = imm_val(&mem[reg[PC] + 1]);
         reg[PC] = imm;
         DISPATCH(+0);
     }
@@ -131,8 +133,20 @@ void Interpreter::exec_program()
         std::abort();
     }
     _jmp: {
-        dump_registers();
-        std::abort();
+        switch (reg[PC]) {
+        case SYS_ENTER_ADDR:
+            switch (imm_val(&mem[reg[SP] + 4])) {
+            case SYSCALL_VM_EXIT:
+                return;
+            default:
+                sys_enter();
+                goto _ret;
+            }
+        default:
+            imm = imm_val(&mem[reg[PC] + 1]);
+            reg[PC] = imm;
+            DISPATCH(+0);
+        }
     }
     _jmpz: {
         std::abort();
@@ -164,4 +178,9 @@ void Interpreter::exec_program()
 void Interpreter::fini_execution()
 {
     dump_registers();
+}
+
+
+void Interpreter::sys_enter()
+{
 }
