@@ -11,7 +11,8 @@
 using std::cout, std:: endl;
 
 
-#define DEBUG(DATA) { if (debug) cout << "[DEBUG] " << DATA; }
+#define DBG_(DATA) { if (debug) { cout << DATA; } }
+#define DBG(DATA) DBG_("[DEBUG] " << DATA)
 #define HEX(WIDTH, DATA) \
     "0x" << \
     std::setw(WIDTH) << \
@@ -104,11 +105,13 @@ protected:
     static const uint8_t REG_DST_MASK = 0xf0;
     static const uint8_t REG_SRC_MASK = 0x0f;
 
-    static uint8_t opcode(uint8_t byte) { return (byte & OPCODE_MASK) >> 1; }
+    static uint8_t instr(uint8_t byte) { return (byte & OPCODE_MASK) >> 1; }
     static uint8_t reg_imm(uint8_t byte) { return byte & REG_IMM_MASK; }
     static uint8_t reg_dst(uint8_t byte) { return (byte & REG_DST_MASK) >> 4; }
     static uint8_t reg_src(uint8_t byte) { return byte & REG_SRC_MASK; }
     static uint32_t imm_val(const uint8_t* ptr) { return *((uint32_t*) ptr); }
+
+    static int32_t& as_int32_t(uint32_t& val) { return (int32_t&) val; }
 
     void dump_registers() const;
 };
@@ -125,4 +128,6 @@ private:
     void fini_execution();
 
     void sys_enter();
+
+    void trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const;
 };
