@@ -13,12 +13,11 @@ using std::cout, std:: endl;
 
 #define DBG_(DATA) { if (debug) { cout << DATA; } }
 #define DBG(DATA) DBG_("[DEBUG] " << DATA)
-#define HEX(WIDTH, DATA) \
-    "0x" << \
+#define HEX_(WIDTH, DATA) \
     std::setw(WIDTH) << \
     std::setfill('0') << std::right << std::hex << std::noshowbase << DATA << \
     std::dec
-
+#define HEX(WIDTH, DATA) "0x" << HEX_(WIDTH, DATA)
 
 class ExecutionEngine {
 protected:

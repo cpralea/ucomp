@@ -249,25 +249,31 @@ void Interpreter::trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const
     static const char* const R[] = {
         "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "flags", "sp", "pc"
     };
+    auto HEX_DUMP = [this](uint8_t num_bytes) {
+        uint8_t* addr = &mem[reg[PC]];
+        for (uint8_t i = 0; i < num_bytes; i++)
+            DBG_(HEX_(2, ((int) *(addr + i))) << " ");
+        for (uint8_t i = 0; i < 6 - num_bytes; i++)
+            DBG_("   ");
+        DBG_("   ");
+    };
 
-    uint32_t addr = reg[PC];
-    uint8_t opcode = mem[addr];
-    uint8_t in = instr(opcode);
-
-    DBG(HEX(8, addr) << "   ");
-
-    switch (in) {
+    DBG("\t" << HEX(8, reg[PC]) << "   ");
+    switch (instr(mem[reg[PC]])) {
     case LOAD:
+        HEX_DUMP(2);
         DBG_("load " << R[dst] << ", [" << R[src] << "]" << endl);
         break;
     case STORE:
     case MOV:
+        HEX_DUMP(ri ? 6 : 2);
         DBG_("mov " << R[dst] << ", ");
-        if (ri == REG) { DBG_(R[src] << endl); } else { DBG_(iv << endl); }
+        if (ri) { DBG_(iv << endl); } else { DBG_(R[src] << endl); }
         break;
     case ADD:
+        HEX_DUMP(ri ? 6 : 2);
         DBG_("add " << R[dst] << ", ");
-        if (ri == REG) { DBG_(R[src] << endl); } else { DBG_(iv << endl); }
+        if (ri) { DBG_(iv << endl); } else { DBG_(R[src] << endl); }
         break;
     case SUB:
     case AND:
@@ -276,18 +282,23 @@ void Interpreter::trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const
     case NOT:
     case CMP:
     case PUSH:
+        HEX_DUMP(2);
         DBG_("push " << R[dst] << endl);
         break;
     case POP:
+        HEX_DUMP(2);
         DBG_("pop " << R[dst] << endl);
         break;
     case CALL:
+        HEX_DUMP(5);
         DBG_("call " << HEX(8, iv) << endl);
         break;
     case RET:
+        HEX_DUMP(1);
         DBG_("ret" << endl);
         break;
     case JMP:
+        HEX_DUMP(5);
         DBG_("jmp " << HEX(8, iv) << endl);
         break;
     case JMPZ:
