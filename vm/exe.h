@@ -27,7 +27,7 @@ protected:
     bool debug;
 
     std::unique_ptr<uint8_t[]> ram;
-    uint64_t reg[16];
+    uint32_t reg[16];
 
     virtual void init_execution() = 0;
     virtual void load_program() = 0;
@@ -105,7 +105,7 @@ protected:
     static uint8_t reg_imm(uint8_t byte) { return byte & REG_IMM_MASK; }
     static uint8_t reg_dst(uint8_t byte) { return (byte & REG_DST_MASK) >> 4; }
     static uint8_t reg_src(uint8_t byte) { return byte & REG_SRC_MASK; }
-    static uint64_t imm(const uint8_t* ptr) { return *((uint64_t*) ptr); }
+    static uint32_t imm_val(const uint8_t* ptr) { return *((uint32_t*) ptr); }
 
     void dump_registers() const;
 };

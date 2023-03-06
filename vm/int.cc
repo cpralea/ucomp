@@ -69,6 +69,7 @@ void Interpreter::exec_program()
     };
 
     uint8_t ri, dst, src;
+    uint32_t imm;
 
     DISPATCH(+0);
     _load: {
@@ -86,7 +87,8 @@ void Interpreter::exec_program()
             reg[dst] = reg[src];
             DISPATCH(+2);
         case IMM:
-            reg[dst] = imm(&ram[reg[PC]+2]);
+            imm = imm_val(&ram[reg[PC]+2]);
+            reg[dst] = imm;
             DISPATCH(+6);
         }
     }
@@ -112,19 +114,24 @@ void Interpreter::exec_program()
         std::abort();
     }
     _push: {
-        dump_registers();
-        std::abort();
+        dst = reg_dst(ram[reg[PC]+1]);
+        reg[SP] -= 4;
+        ram[reg[SP]] = reg[dst];
+        DISPATCH(+2);
     }
     _pop: {
         std::abort();
     }
     _call: {
-        std::abort();
+        imm = imm_val(&ram[reg[PC]+1]);
+        reg[PC] = imm;
+        DISPATCH(+0);
     }
     _ret: {
         std::abort();
     }
     _jmp: {
+        dump_registers();
         std::abort();
     }
     _jmpz: {
