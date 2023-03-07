@@ -84,7 +84,11 @@ void Interpreter::exec_program()
     }
 
     _store: {
-        std::abort();
+        dst = reg_dst(mem[reg[PC] + 1]);
+        src = reg_src(mem[reg[PC] + 1]);
+        TRACE();
+        mem[reg[dst]] = reg[src];
+        DISPATCH(+2);
     }
 
     _mov: {
@@ -122,27 +126,111 @@ void Interpreter::exec_program()
     }
 
     _sub: {
-        std::abort();
+        ri = reg_imm(mem[reg[PC]]);
+        dst = reg_dst(mem[reg[PC] + 1]);
+        switch (ri) {
+        case REG:
+            src = reg_src(mem[reg[PC] + 1]);
+            TRACE();
+            as_int32_t(reg[dst]) -= as_int32_t(reg[src]);
+            DISPATCH(+2);
+        case IMM:
+            iv = imm_val(&mem[reg[PC] + 2]);
+            TRACE();
+            reg[dst] -= iv;
+            DISPATCH(+6);
+        }
     }
 
     _and: {
-        std::abort();
+        ri = reg_imm(mem[reg[PC]]);
+        dst = reg_dst(mem[reg[PC] + 1]);
+        switch (ri) {
+        case REG:
+            src = reg_src(mem[reg[PC] + 1]);
+            TRACE();
+            reg[dst] &= reg[src];
+            DISPATCH(+2);
+        case IMM:
+            iv = imm_val(&mem[reg[PC] + 2]);
+            TRACE();
+            reg[dst] &= iv;
+            DISPATCH(+6);
+        }
     }
 
     _or: {
-        std::abort();
+        ri = reg_imm(mem[reg[PC]]);
+        dst = reg_dst(mem[reg[PC] + 1]);
+        switch (ri) {
+        case REG:
+            src = reg_src(mem[reg[PC] + 1]);
+            TRACE();
+            reg[dst] |= reg[src];
+            DISPATCH(+2);
+        case IMM:
+            iv = imm_val(&mem[reg[PC] + 2]);
+            TRACE();
+            reg[dst] |= iv;
+            DISPATCH(+6);
+        }
     }
 
     _xor: {
-        std::abort();
+        ri = reg_imm(mem[reg[PC]]);
+        dst = reg_dst(mem[reg[PC] + 1]);
+        switch (ri) {
+        case REG:
+            src = reg_src(mem[reg[PC] + 1]);
+            TRACE();
+            reg[dst] ^= reg[src];
+            DISPATCH(+2);
+        case IMM:
+            iv = imm_val(&mem[reg[PC] + 2]);
+            TRACE();
+            reg[dst] ^= iv;
+            DISPATCH(+6);
+        }
     }
 
     _not: {
-        std::abort();
+        dst = reg_dst(mem[reg[PC] + 1]);
+        TRACE();
+        reg[dst] = ~reg[dst];
+        DISPATCH(+2);
     }
 
     _cmp: {
-        std::abort();
+        ri = reg_imm(mem[reg[PC]]);
+        dst = reg_dst(mem[reg[PC] + 1]);
+        switch (ri) {
+        case REG:
+            src = reg_src(mem[reg[PC] + 1]);
+            TRACE();
+            reg[FLAGS] = 0;
+            if (reg[dst] == 0)
+                reg[FLAGS] |= FLAG_Z;
+            if (reg[dst] < reg[src])
+                reg[FLAGS] |= FLAG_LT;
+            else if (reg[dst] > reg[src])
+                reg[FLAGS] |= FLAG_GT;
+            else
+                reg[FLAGS] |= FLAG_EQ;
+            DISPATCH(+2);
+        case IMM:
+            iv = imm_val(&mem[reg[PC] + 2]);
+            TRACE();
+            reg[FLAGS] = 0;
+            if (reg[dst] == 0)
+                reg[FLAGS] |= FLAG_Z;
+            if (reg[dst] < iv)
+                reg[FLAGS] |= FLAG_LT;
+            else if (reg[dst] > iv)
+                reg[FLAGS] |= FLAG_GT;
+            else
+                reg[FLAGS] |= FLAG_EQ;
+            DISPATCH(+6);
+        }
     }
 
     _push: {
@@ -198,35 +286,91 @@ void Interpreter::exec_program()
     }
 
     _jmpz: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & FLAG_Z) {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        } else {
+            DISPATCH(+5);
+        }
     }
 
     _jmpnz: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & FLAG_Z) {
+            DISPATCH(+5);
+        } else {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        }
     }
 
     _jmpeq: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & FLAG_EQ) {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        } else {
+            DISPATCH(+5);
+        }
     }
 
     _jmpne: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & FLAG_EQ) {
+            DISPATCH(+5);
+        } else {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        }
     }
 
     _jmpgt: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & FLAG_GT) {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        } else {
+            DISPATCH(+5);
+        }
     }
 
     _jmplt: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & FLAG_LT) {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        } else {
+            DISPATCH(+5);
+        }
     }
 
     _jmpge: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & (FLAG_GT | FLAG_EQ)) {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        } else {
+            DISPATCH(+5);
+        }
     }
 
     _jmple: {
-        std::abort();
+        iv = imm_val(&mem[reg[PC] + 1]);
+        TRACE();
+        if (reg[FLAGS] & (FLAG_LT | FLAG_EQ)) {
+            reg[PC] = iv;
+            DISPATCH(+0);
+        } else {
+            DISPATCH(+5);
+        }
     }
 
     std::abort();
@@ -246,6 +390,9 @@ void Interpreter::sys_enter()
 
 void Interpreter::trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const
 {
+    if (!debug)
+        return;
+
     static const char* const R[] = {
         "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "flags", "sp", "pc"
     };
@@ -261,54 +408,51 @@ void Interpreter::trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const
     DBG("\t" << HEX(8, reg[PC]) << "   ");
     switch (instr(mem[reg[PC]])) {
     case LOAD:
-        HEX_DUMP(2);
-        DBG_("load " << R[dst] << ", [" << R[src] << "]" << endl);
-        break;
+        HEX_DUMP(2);      DBG_("load " << R[dst] << ", [" << R[src] << "]");                  DBG_(endl); break;
     case STORE:
+        HEX_DUMP(2);      DBG_("store [" << R[dst] << "], " << R[src]);                       DBG_(endl); break;
     case MOV:
-        HEX_DUMP(ri ? 6 : 2);
-        DBG_("mov " << R[dst] << ", ");
-        if (ri) { DBG_(iv << endl); } else { DBG_(R[src] << endl); }
-        break;
+        HEX_DUMP(ri?6:2); DBG_("mov " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
     case ADD:
-        HEX_DUMP(ri ? 6 : 2);
-        DBG_("add " << R[dst] << ", ");
-        if (ri) { DBG_(iv << endl); } else { DBG_(R[src] << endl); }
-        break;
+        HEX_DUMP(ri?6:2); DBG_("add " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
     case SUB:
+        HEX_DUMP(ri?6:2); DBG_("sub " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
     case AND:
+        HEX_DUMP(ri?6:2); DBG_("and " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
     case OR:
+        HEX_DUMP(ri?6:2); DBG_("or " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]);  DBG_(endl); break;
     case XOR:
+        HEX_DUMP(ri?6:2); DBG_("xor " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
     case NOT:
+        HEX_DUMP(2);      DBG_("not " << R[dst]);                                             DBG_(endl); break;
     case CMP:
+        HEX_DUMP(ri?6:2); DBG_("cmp " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
     case PUSH:
-        HEX_DUMP(2);
-        DBG_("push " << R[dst] << endl);
-        break;
+        HEX_DUMP(2);      DBG_("push " << R[dst]);                                            DBG_(endl); break;
     case POP:
-        HEX_DUMP(2);
-        DBG_("pop " << R[dst] << endl);
-        break;
+        HEX_DUMP(2);      DBG_("pop " << R[dst]);                                             DBG_(endl); break;
     case CALL:
-        HEX_DUMP(5);
-        DBG_("call " << HEX(8, iv) << endl);
-        break;
+        HEX_DUMP(5);      DBG_("call " << HEX(8, iv));                                        DBG_(endl); break;
     case RET:
-        HEX_DUMP(1);
-        DBG_("ret" << endl);
-        break;
+        HEX_DUMP(1);      DBG_("ret");                                                        DBG_(endl); break;
     case JMP:
-        HEX_DUMP(5);
-        DBG_("jmp " << HEX(8, iv) << endl);
-        break;
+        HEX_DUMP(5);      DBG_("jmp " << HEX(8, iv));                                         DBG_(endl); break;
     case JMPZ:
+        HEX_DUMP(5);      DBG_("jmpz " << HEX(8, iv));                                        DBG_(endl); break;
     case JMPNZ:
+        HEX_DUMP(5);      DBG_("jmpnz " << HEX(8, iv));                                       DBG_(endl); break;
     case JMPEQ:
+        HEX_DUMP(5);      DBG_("jmpeq " << HEX(8, iv));                                       DBG_(endl); break;
     case JMPNE:
+        HEX_DUMP(5);      DBG_("jmpne " << HEX(8, iv));                                       DBG_(endl); break;
     case JMPGT:
+        HEX_DUMP(5);      DBG_("jmpgt " << HEX(8, iv));                                       DBG_(endl); break;
     case JMPLT:
+        HEX_DUMP(5);      DBG_("jmplt " << HEX(8, iv));                                       DBG_(endl); break;
     case JMPGE:
+        HEX_DUMP(5);      DBG_("jmpge " << HEX(8, iv));                                       DBG_(endl); break;
     case JMPLE:
+        HEX_DUMP(5);      DBG_("jmple " << HEX(8, iv));                                       DBG_(endl); break;
     default:
         std::abort();
     }
