@@ -408,52 +408,53 @@ void Interpreter::trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const
     DBG("\t" << HEX(8, reg[PC]) << "   ");
     switch (instr(mem[reg[PC]])) {
     case LOAD:
-        HEX_DUMP(2);      DBG_("load " << R[dst] << ", [" << R[src] << "]");                  DBG_(endl); break;
+        HEX_DUMP(2);      DBG_("load " << R[dst] << ", [" << R[src] << "]");                  break;
     case STORE:
-        HEX_DUMP(2);      DBG_("store [" << R[dst] << "], " << R[src]);                       DBG_(endl); break;
+        HEX_DUMP(2);      DBG_("store [" << R[dst] << "], " << R[src]);                       break;
     case MOV:
-        HEX_DUMP(ri?6:2); DBG_("mov " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
+        HEX_DUMP(ri?6:2); DBG_("mov " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
     case ADD:
-        HEX_DUMP(ri?6:2); DBG_("add " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
+        HEX_DUMP(ri?6:2); DBG_("add " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
     case SUB:
-        HEX_DUMP(ri?6:2); DBG_("sub " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
+        HEX_DUMP(ri?6:2); DBG_("sub " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
     case AND:
-        HEX_DUMP(ri?6:2); DBG_("and " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
+        HEX_DUMP(ri?6:2); DBG_("and " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
     case OR:
-        HEX_DUMP(ri?6:2); DBG_("or " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]);  DBG_(endl); break;
+        HEX_DUMP(ri?6:2); DBG_("or " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]);  break;
     case XOR:
-        HEX_DUMP(ri?6:2); DBG_("xor " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
+        HEX_DUMP(ri?6:2); DBG_("xor " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
     case NOT:
-        HEX_DUMP(2);      DBG_("not " << R[dst]);                                             DBG_(endl); break;
+        HEX_DUMP(2);      DBG_("not " << R[dst]);                                             break;
     case CMP:
-        HEX_DUMP(ri?6:2); DBG_("cmp " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); DBG_(endl); break;
+        HEX_DUMP(ri?6:2); DBG_("cmp " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
     case PUSH:
-        HEX_DUMP(2);      DBG_("push " << R[dst]);                                            DBG_(endl); break;
+        HEX_DUMP(2);      DBG_("push " << R[dst]);                                            break;
     case POP:
-        HEX_DUMP(2);      DBG_("pop " << R[dst]);                                             DBG_(endl); break;
+        HEX_DUMP(2);      DBG_("pop " << R[dst]);                                             break;
     case CALL:
-        HEX_DUMP(5);      DBG_("call " << HEX(8, iv));                                        DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("call " << HEX(8, iv));                                        break;
     case RET:
-        HEX_DUMP(1);      DBG_("ret");                                                        DBG_(endl); break;
+        HEX_DUMP(1);      DBG_("ret");                                                        break;
     case JMP:
-        HEX_DUMP(5);      DBG_("jmp " << HEX(8, iv));                                         DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmp " << HEX(8, iv));                                         break;
     case JMPZ:
-        HEX_DUMP(5);      DBG_("jmpz " << HEX(8, iv));                                        DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmpz " << HEX(8, iv));                                        break;
     case JMPNZ:
-        HEX_DUMP(5);      DBG_("jmpnz " << HEX(8, iv));                                       DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmpnz " << HEX(8, iv));                                       break;
     case JMPEQ:
-        HEX_DUMP(5);      DBG_("jmpeq " << HEX(8, iv));                                       DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmpeq " << HEX(8, iv));                                       break;
     case JMPNE:
-        HEX_DUMP(5);      DBG_("jmpne " << HEX(8, iv));                                       DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmpne " << HEX(8, iv));                                       break;
     case JMPGT:
-        HEX_DUMP(5);      DBG_("jmpgt " << HEX(8, iv));                                       DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmpgt " << HEX(8, iv));                                       break;
     case JMPLT:
-        HEX_DUMP(5);      DBG_("jmplt " << HEX(8, iv));                                       DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmplt " << HEX(8, iv));                                       break;
     case JMPGE:
-        HEX_DUMP(5);      DBG_("jmpge " << HEX(8, iv));                                       DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmpge " << HEX(8, iv));                                       break;
     case JMPLE:
-        HEX_DUMP(5);      DBG_("jmple " << HEX(8, iv));                                       DBG_(endl); break;
+        HEX_DUMP(5);      DBG_("jmple " << HEX(8, iv));                                       break;
     default:
         std::abort();
     }
+    DBG_(endl);
 }
