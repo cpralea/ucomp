@@ -115,7 +115,7 @@ void Interpreter::exec_program()
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
-            as_int32_t(reg[dst]) += as_int32_t(reg[src]);
+            uint32_to_int32(reg[dst]) += uint32_to_int32(reg[src]);
             DISPATCH(+2);
         case IMM:
             iv = imm_val(&mem[reg[PC] + 2]);
@@ -132,7 +132,7 @@ void Interpreter::exec_program()
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
-            as_int32_t(reg[dst]) -= as_int32_t(reg[src]);
+            uint32_to_int32(reg[dst]) -= uint32_to_int32(reg[src]);
             DISPATCH(+2);
         case IMM:
             iv = imm_val(&mem[reg[PC] + 2]);
@@ -237,14 +237,14 @@ void Interpreter::exec_program()
         dst = reg_dst(mem[reg[PC] + 1]);
         TRACE();
         reg[SP] -= 4;
-        mem[reg[SP]] = reg[dst];
+        uint8_to_uint32(mem[reg[SP]]) = reg[dst];
         DISPATCH(+2);
     }
 
     _pop: {
         dst = reg_dst(mem[reg[PC] + 1]);
         TRACE();
-        reg[dst] = mem[reg[SP]];
+        reg[dst] = uint8_to_uint32(mem[reg[SP]]);
         reg[SP] += 4;
         DISPATCH(+2);
     }
@@ -253,7 +253,7 @@ void Interpreter::exec_program()
         iv = imm_val(&mem[reg[PC] + 1]);
         TRACE();
         reg[SP] -= 4;
-        mem[reg[SP]] = reg[PC] + 5;
+        uint8_to_uint32(mem[reg[SP]]) = reg[PC] + 5;
         reg[PC] = iv;
         DISPATCH(+0);
     }

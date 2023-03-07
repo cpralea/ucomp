@@ -115,7 +115,8 @@ protected:
     static uint8_t reg_src(uint8_t byte) { return byte & REG_SRC_MASK; }
     static uint32_t imm_val(const uint8_t* ptr) { return *((uint32_t*) ptr); }
 
-    static int32_t& as_int32_t(uint32_t& val) { return (int32_t&) val; }
+    static int32_t& uint32_to_int32(uint32_t& val) { return (int32_t&) val; }
+    static uint32_t& uint8_to_uint32(uint8_t& val) { return (uint32_t&) val; }
 
     void dump_registers() const;
 };
