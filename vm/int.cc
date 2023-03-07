@@ -260,7 +260,7 @@ void Interpreter::exec_program()
 
     _ret: {
         TRACE();
-        reg[PC] = mem[reg[SP]];
+        reg[PC] = uint8_to_uint32(mem[reg[SP]]);
         reg[SP] += 4;
         DISPATCH(+0);
     }
