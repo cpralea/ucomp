@@ -79,7 +79,7 @@ void Interpreter::exec_program()
         dst = reg_dst(mem[reg[PC] + 1]);
         src = reg_src(mem[reg[PC] + 1]);
         TRACE();
-        reg[dst] = mem[reg[src]];
+        reg[dst] = uint8_to_uint32(mem[reg[src]]);
         DISPATCH(+2);
     }
 
@@ -87,7 +87,7 @@ void Interpreter::exec_program()
         dst = reg_dst(mem[reg[PC] + 1]);
         src = reg_src(mem[reg[PC] + 1]);
         TRACE();
-        mem[reg[dst]] = reg[src];
+        uint8_to_uint32(mem[reg[dst]]) = reg[src];
         DISPATCH(+2);
     }
 
