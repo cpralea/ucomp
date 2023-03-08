@@ -101,7 +101,7 @@ void Interpreter::exec_program()
             reg[dst] = reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm_val(&mem[reg[PC] + 2]);
+            iv = imm_val(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] = iv;
             DISPATCH(+6);
@@ -118,7 +118,7 @@ void Interpreter::exec_program()
             uint32_to_int32(reg[dst]) += uint32_to_int32(reg[src]);
             DISPATCH(+2);
         case IMM:
-            iv = imm_val(&mem[reg[PC] + 2]);
+            iv = imm_val(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] += iv;
             DISPATCH(+6);
@@ -135,7 +135,7 @@ void Interpreter::exec_program()
             uint32_to_int32(reg[dst]) -= uint32_to_int32(reg[src]);
             DISPATCH(+2);
         case IMM:
-            iv = imm_val(&mem[reg[PC] + 2]);
+            iv = imm_val(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] -= iv;
             DISPATCH(+6);
@@ -152,7 +152,7 @@ void Interpreter::exec_program()
             reg[dst] &= reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm_val(&mem[reg[PC] + 2]);
+            iv = imm_val(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] &= iv;
             DISPATCH(+6);
@@ -169,7 +169,7 @@ void Interpreter::exec_program()
             reg[dst] |= reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm_val(&mem[reg[PC] + 2]);
+            iv = imm_val(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] |= iv;
             DISPATCH(+6);
@@ -186,7 +186,7 @@ void Interpreter::exec_program()
             reg[dst] ^= reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm_val(&mem[reg[PC] + 2]);
+            iv = imm_val(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] ^= iv;
             DISPATCH(+6);
@@ -218,7 +218,7 @@ void Interpreter::exec_program()
                 reg[FLAGS] |= FLAG_EQ;
             DISPATCH(+2);
         case IMM:
-            iv = imm_val(&mem[reg[PC] + 2]);
+            iv = imm_val(mem[reg[PC] + 2]);
             TRACE();
             reg[FLAGS] = 0;
             if (reg[dst] == 0)
@@ -250,7 +250,7 @@ void Interpreter::exec_program()
     }
 
     _call: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         reg[SP] -= 4;
         uint8_to_uint32(mem[reg[SP]]) = reg[PC] + 5;
@@ -266,11 +266,11 @@ void Interpreter::exec_program()
     }
 
     _jmp: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         switch (reg[PC]) {
         case SYS_ENTER_ADDR: {
-            uint32_t syscall_id = imm_val(&mem[reg[SP] + 4]);
+            uint32_t syscall_id = imm_val(mem[reg[SP] + 4]);
             switch (syscall_id) {
             case SYSCALL_VM_EXIT:
                 return;
@@ -286,7 +286,7 @@ void Interpreter::exec_program()
     }
 
     _jmpz: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_Z) {
             reg[PC] = iv;
@@ -297,7 +297,7 @@ void Interpreter::exec_program()
     }
 
     _jmpnz: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_Z) {
             DISPATCH(+5);
@@ -308,7 +308,7 @@ void Interpreter::exec_program()
     }
 
     _jmpeq: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_EQ) {
             reg[PC] = iv;
@@ -319,7 +319,7 @@ void Interpreter::exec_program()
     }
 
     _jmpne: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_EQ) {
             DISPATCH(+5);
@@ -330,7 +330,7 @@ void Interpreter::exec_program()
     }
 
     _jmpgt: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_GT) {
             reg[PC] = iv;
@@ -341,7 +341,7 @@ void Interpreter::exec_program()
     }
 
     _jmplt: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_LT) {
             reg[PC] = iv;
@@ -352,7 +352,7 @@ void Interpreter::exec_program()
     }
 
     _jmpge: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & (FLAG_GT | FLAG_EQ)) {
             reg[PC] = iv;
@@ -363,7 +363,7 @@ void Interpreter::exec_program()
     }
 
     _jmple: {
-        iv = imm_val(&mem[reg[PC] + 1]);
+        iv = imm_val(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & (FLAG_LT | FLAG_EQ)) {
             reg[PC] = iv;
