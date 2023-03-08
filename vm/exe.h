@@ -96,18 +96,19 @@ protected:
         IMM     =  1
     } reg_imm_t;
 
-    static const uint32_t SYS_ENTER_ADDR    = 0x0;
-    static const uint32_t SYSCALL_VM_EXIT   = 0;
+    static const uint32_t SYS_ENTER_ADDR        = 0x0;
+    static const uint32_t SYSCALL_VM_EXIT       = 0;
+    static const uint32_t SYSCALL_DISPLAY_INT   = 1;
 
-    static const uint32_t FLAG_Z            = 0b00000001;
-    static const uint32_t FLAG_EQ           = 0b00000010;
-    static const uint32_t FLAG_LT           = 0b00000100;
-    static const uint32_t FLAG_GT           = 0x00001000;
+    static const uint32_t FLAG_Z                = 0b00000001;
+    static const uint32_t FLAG_EQ               = 0b00000010;
+    static const uint32_t FLAG_LT               = 0b00000100;
+    static const uint32_t FLAG_GT               = 0x00001000;
 
-    static const uint8_t OPCODE_MASK        = 0xfe;
-    static const uint8_t REG_IMM_MASK       = 0x01;
-    static const uint8_t REG_DST_MASK       = 0xf0;
-    static const uint8_t REG_SRC_MASK       = 0x0f;
+    static const uint8_t OPCODE_MASK            = 0xfe;
+    static const uint8_t REG_IMM_MASK           = 0x01;
+    static const uint8_t REG_DST_MASK           = 0xf0;
+    static const uint8_t REG_SRC_MASK           = 0x0f;
 
     static uint8_t instr(uint8_t byte) { return (byte & OPCODE_MASK) >> 1; }
     static uint8_t reg_imm(uint8_t byte) { return byte & REG_IMM_MASK; }

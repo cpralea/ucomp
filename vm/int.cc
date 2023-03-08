@@ -385,6 +385,18 @@ void Interpreter::fini_execution()
 
 void Interpreter::sys_enter()
 {
+    uint32_t syscall_id = imm_val(mem[reg[SP] + 4]);
+    switch (syscall_id) {
+    case SYSCALL_VM_EXIT:
+        std::abort();
+    case SYSCALL_DISPLAY_INT: {
+        int32_t val = imm_val(mem[reg[SP] + 8]);
+        cout << val << endl;
+        break;
+    }
+    default:
+        std::abort();
+    }
 }
 
 
