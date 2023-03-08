@@ -3,7 +3,7 @@
 all: build/vm.so
 
 CXX = g++
-CXXFLAGS = -Wall -std=c++17 -g
+CXXFLAGS = -Wall -std=c++17 -fPIC -g
 
 -include $(patsubst %.cc, build/deps/%.d, $(wildcard *.cc))
 
