@@ -34,7 +34,7 @@ class Instruction(IntEnum):
 
 
 @unique
-class RegImm(IntEnum):
+class AccessMode(IntEnum):
     REG     =  0
     IMM     =  1
 

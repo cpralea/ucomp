@@ -4,13 +4,13 @@ import sys
 from dataclasses import dataclass
 from typing import Dict, List, Set, TextIO, Tuple
 
-from asmspec import Instruction, RegImm, Register
+from asmspec import Instruction, AccessMode, Register
 
 
 @dataclass
 class VMInstrData:
     instr: Instruction
-    ri: RegImm
+    am: AccessMode
     dst: Register | int | None  = None
     src: Register | int | None  = None
     label: str | None           = None
@@ -41,10 +41,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def unpack_opcode(hex_byte: str) -> Tuple[Instruction, RegImm]:
+def unpack_opcode(hex_byte: str) -> Tuple[Instruction, AccessMode]:
     instr: Instruction = Instruction((int(hex_byte, base=16) & ~0x01) >> 1)
-    ri: RegImm = RegImm(int(hex_byte, base=16) & 0x01)
-    return instr, ri
+    am: AccessMode = AccessMode(int(hex_byte, base=16) & 0x01)
+    return instr, am
 
 
 def load_hex_bytes(input: TextIO):
@@ -64,7 +64,7 @@ def peek_hex_byte(input: TextIO) -> str:
     return hex_bytes_buffer[0]
 
 
-def peek_opcode(input: TextIO) -> Tuple[Instruction, RegImm] | None:
+def peek_opcode(input: TextIO) -> Tuple[Instruction, AccessMode] | None:
     hex_byte: str = peek_hex_byte(input)
     if not hex_byte:
         return None
@@ -72,7 +72,7 @@ def peek_opcode(input: TextIO) -> Tuple[Instruction, RegImm] | None:
 
 
 def peek_instr(input: TextIO) -> Instruction | None:
-    opcode: Tuple[Instruction, RegImm] | None = peek_opcode(input)
+    opcode: Tuple[Instruction, AccessMode] | None = peek_opcode(input)
     if opcode is None:
         return None
     instr, _ = opcode
@@ -86,7 +86,7 @@ def get_hex_byte(input: TextIO) -> str:
     return hex_byte
 
 
-def disasm_opcode(input: TextIO) -> Tuple[Instruction, RegImm]:
+def disasm_opcode(input: TextIO) -> Tuple[Instruction, AccessMode]:
     return unpack_opcode(get_hex_byte(input))
 
 
@@ -103,41 +103,41 @@ def disasm_imm(input: TextIO) -> int:
 
 
 def disasm_instr(input: TextIO) -> VMInstrData:
-    instr, ri = disasm_opcode(input)
-    return VMInstrData(instr, ri, len=1)
+    instr, am = disasm_opcode(input)
+    return VMInstrData(instr, am, len=1)
 
 
 def disasm_instr_r(input: TextIO) -> VMInstrData:
-    instr, ri = disasm_opcode(input)
+    instr, am = disasm_opcode(input)
     dst, _ = disasm_reg_reg(input)
-    return VMInstrData(instr, ri, dst=dst, len=2)
+    return VMInstrData(instr, am, dst=dst, len=2)
 
 
 def disasm_instr_i(input: TextIO) -> VMInstrData:
-    instr, ri = disasm_opcode(input)
-    return VMInstrData(instr, ri, dst=disasm_imm(input), len=5)
+    instr, am = disasm_opcode(input)
+    return VMInstrData(instr, am, dst=disasm_imm(input), len=5)
 
 
 def disasm_instr_rr(input: TextIO) -> VMInstrData:
-    instr, ri = disasm_opcode(input)
+    instr, am = disasm_opcode(input)
     dst, src = disasm_reg_reg(input)
-    return VMInstrData(instr, ri, dst=dst, src=src, len=2)
+    return VMInstrData(instr, am, dst=dst, src=src, len=2)
 
 
 def disasm_instr_ri(input: TextIO) -> VMInstrData:
-    instr, ri = disasm_opcode(input)
+    instr, am = disasm_opcode(input)
     dst, _ = disasm_reg_reg(input)
-    return VMInstrData(instr, ri, dst=dst, src=disasm_imm(input), len=6)
+    return VMInstrData(instr, am, dst=dst, src=disasm_imm(input), len=6)
 
 
 def disasm_instr_src_dst(input: TextIO) -> VMInstrData:
-    opcode: Tuple[Instruction, RegImm] | None = peek_opcode(input)
+    opcode: Tuple[Instruction, AccessMode] | None = peek_opcode(input)
     assert opcode is not None
-    _, ri = opcode
-    match ri:
-        case RegImm.REG:
+    _, am = opcode
+    match am:
+        case AccessMode.REG:
             return disasm_instr_rr(input)
-        case RegImm.IMM:
+        case AccessMode.IMM:
             return disasm_instr_ri(input)
 
 
@@ -240,7 +240,7 @@ def disasm_instruction(input: TextIO) -> VMInstrData | None:
             return disasm_jmpge(input)
         case Instruction.JMPLE:
             return disasm_jmple(input)
-        case _:
+        case _: # pyright: reportUnnecessaryComparison=false
             sys.exit(f"Instruction '{instr}' not supported yet.")
 
 
@@ -263,7 +263,7 @@ def load_label_data(labels: TextIO):
 def compute_label_data():
     addrs: Set[int] = set()
     for addr, data in program.items():
-        if data.ri == RegImm.IMM and type(data.dst) == int and data.dst in program.keys():
+        if data.am == AccessMode.IMM and type(data.dst) == int and data.dst in program.keys():
             addrs.add(data.dst) # type: ignore
     for addr in sorted(addrs):
         global cur_label_idx

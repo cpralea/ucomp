@@ -6,7 +6,7 @@ import sys
 from math import ceil
 from typing import Callable, Dict, List, Optional, TextIO
 
-from asmspec import Instruction, RegImm, Register
+from asmspec import Instruction, AccessMode, Register
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,24 +63,24 @@ def gen_i(imm: int) -> int:
     return int(little_endian, base=16)
 
 
-def gen_opcode(instr: Instruction, ri: RegImm) -> int:
-    return (instr << 1) + ri
+def gen_opcode(instr: Instruction, am: AccessMode) -> int:
+    return (instr << 1) + am
 def gen_instr(instr: Instruction) -> int:
-    return gen_opcode(instr, RegImm.REG)
+    return gen_opcode(instr, AccessMode.REG)
 def gen_rr(dst: Register, src: Register) -> int:
     return (dst << 4) + src
 def gen_ri(reg: Register, imm: int) -> int:
     return ((reg << 4) << 32) + gen_i(imm)
 def gen_instr_rr(instr: Instruction, dst: Register, src: Register) -> int:
-    return (gen_opcode(instr, RegImm.REG) << 8) + gen_rr(dst, src)
+    return (gen_opcode(instr, AccessMode.REG) << 8) + gen_rr(dst, src)
 def gen_instr_ri(instr: Instruction, dst: Register, src: int) -> int:
-    return (gen_opcode(instr, RegImm.IMM) << 40) + gen_ri(dst, src)
+    return (gen_opcode(instr, AccessMode.IMM) << 40) + gen_ri(dst, src)
 def gen_r(reg: Register) -> int:
     return reg << 4
 def gen_instr_r(instr: Instruction, reg: Register) -> int:
-    return (gen_opcode(instr, RegImm.REG) << 8) + gen_r(reg)
+    return (gen_opcode(instr, AccessMode.REG) << 8) + gen_r(reg)
 def gen_instr_i(instr: Instruction, imm: int) -> int:
-    return (gen_opcode(instr, RegImm.IMM) << 32) + gen_i(imm)
+    return (gen_opcode(instr, AccessMode.IMM) << 32) + gen_i(imm)
 
 
 def gen_load_rr(dst: Register, src: Register) -> int:
