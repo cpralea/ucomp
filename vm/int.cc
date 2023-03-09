@@ -9,7 +9,7 @@
     goto *instr_exec_handle[instr(mem[reg[PC]])]; \
 }
 
-#define TRACE() if (debug) { trace(ri, dst, src, iv); }
+#define TRACE() if (debug) { trace(am, dst, src, iv); }
 
 
 Interpreter::Interpreter(const void* prog, size_t prog_size, size_t ram_size_mb, bool debug)
@@ -70,7 +70,7 @@ void Interpreter::exec_program()
         &&_jmple,
     };
 
-    uint8_t ri, dst, src;
+    uint8_t am, dst, src;
     uint32_t iv;
 
     DISPATCH(+0);
@@ -92,9 +92,9 @@ void Interpreter::exec_program()
     }
 
     _mov: {
-        ri = reg_imm(mem[reg[PC]]);
+        am = access_mode(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
-        switch (ri) {
+        switch (am) {
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
@@ -109,9 +109,9 @@ void Interpreter::exec_program()
     }
 
     _add: {
-        ri = reg_imm(mem[reg[PC]]);
+        am = access_mode(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
-        switch (ri) {
+        switch (am) {
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
@@ -126,9 +126,9 @@ void Interpreter::exec_program()
     }
 
     _sub: {
-        ri = reg_imm(mem[reg[PC]]);
+        am = access_mode(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
-        switch (ri) {
+        switch (am) {
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
@@ -143,9 +143,9 @@ void Interpreter::exec_program()
     }
 
     _and: {
-        ri = reg_imm(mem[reg[PC]]);
+        am = access_mode(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
-        switch (ri) {
+        switch (am) {
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
@@ -160,9 +160,9 @@ void Interpreter::exec_program()
     }
 
     _or: {
-        ri = reg_imm(mem[reg[PC]]);
+        am = access_mode(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
-        switch (ri) {
+        switch (am) {
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
@@ -177,9 +177,9 @@ void Interpreter::exec_program()
     }
 
     _xor: {
-        ri = reg_imm(mem[reg[PC]]);
+        am = access_mode(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
-        switch (ri) {
+        switch (am) {
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
@@ -201,9 +201,9 @@ void Interpreter::exec_program()
     }
 
     _cmp: {
-        ri = reg_imm(mem[reg[PC]]);
+        am = access_mode(mem[reg[PC]]);
         dst = reg_dst(mem[reg[PC] + 1]);
-        switch (ri) {
+        switch (am) {
         case REG:
             src = reg_src(mem[reg[PC] + 1]);
             TRACE();
@@ -400,7 +400,7 @@ void Interpreter::sys_enter()
 }
 
 
-void Interpreter::trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const
+void Interpreter::trace(uint8_t am, uint8_t dst, uint8_t src, uint32_t iv) const
 {
     if (!debug)
         return;
@@ -424,21 +424,21 @@ void Interpreter::trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const
     case STORE:
         HEX_DUMP(2);      DBG_("store [" << R[dst] << "], " << R[src]);                       break;
     case MOV:
-        HEX_DUMP(ri?6:2); DBG_("mov " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
+        HEX_DUMP(am?6:2); DBG_("mov " << R[dst] << ", "); if (am) DBG_(iv) else DBG_(R[src]); break;
     case ADD:
-        HEX_DUMP(ri?6:2); DBG_("add " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
+        HEX_DUMP(am?6:2); DBG_("add " << R[dst] << ", "); if (am) DBG_(iv) else DBG_(R[src]); break;
     case SUB:
-        HEX_DUMP(ri?6:2); DBG_("sub " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
+        HEX_DUMP(am?6:2); DBG_("sub " << R[dst] << ", "); if (am) DBG_(iv) else DBG_(R[src]); break;
     case AND:
-        HEX_DUMP(ri?6:2); DBG_("and " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
+        HEX_DUMP(am?6:2); DBG_("and " << R[dst] << ", "); if (am) DBG_(iv) else DBG_(R[src]); break;
     case OR:
-        HEX_DUMP(ri?6:2); DBG_("or " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]);  break;
+        HEX_DUMP(am?6:2); DBG_("or " << R[dst] << ", "); if (am) DBG_(iv) else DBG_(R[src]);  break;
     case XOR:
-        HEX_DUMP(ri?6:2); DBG_("xor " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
+        HEX_DUMP(am?6:2); DBG_("xor " << R[dst] << ", "); if (am) DBG_(iv) else DBG_(R[src]); break;
     case NOT:
         HEX_DUMP(2);      DBG_("not " << R[dst]);                                             break;
     case CMP:
-        HEX_DUMP(ri?6:2); DBG_("cmp " << R[dst] << ", "); if (ri) DBG_(iv) else DBG_(R[src]); break;
+        HEX_DUMP(am?6:2); DBG_("cmp " << R[dst] << ", "); if (am) DBG_(iv) else DBG_(R[src]); break;
     case PUSH:
         HEX_DUMP(2);      DBG_("push " << R[dst]);                                            break;
     case POP:

@@ -94,7 +94,7 @@ protected:
     typedef enum : uint8_t {
         REG     =  0,
         IMM     =  1
-    } reg_imm_t;
+    } access_mode_t;
 
     static const uint32_t SYS_ENTER_ADDR        = 0x0;
     static const uint32_t SYSCALL_VM_EXIT       = 0;
@@ -105,13 +105,13 @@ protected:
     static const uint32_t FLAG_LT               = 0b00000100;
     static const uint32_t FLAG_GT               = 0x00001000;
 
-    static const uint8_t OPCODE_MASK            = 0xfc;
-    static const uint8_t REG_IMM_MASK           = 0x01;
+    static const uint8_t INSTRUCTION_MASK       = 0xfc;
+    static const uint8_t ACCESS_MODE_MASK       = 0x01;
     static const uint8_t REG_DST_MASK           = 0xf0;
     static const uint8_t REG_SRC_MASK           = 0x0f;
 
-    static uint8_t instr(uint8_t byte) { return (byte & OPCODE_MASK) >> 2; }
-    static uint8_t reg_imm(uint8_t byte) { return byte & REG_IMM_MASK; }
+    static uint8_t instr(uint8_t byte) { return (byte & INSTRUCTION_MASK) >> 2; }
+    static uint8_t access_mode(uint8_t byte) { return byte & ACCESS_MODE_MASK; }
     static uint8_t reg_dst(uint8_t byte) { return (byte & REG_DST_MASK) >> 4; }
     static uint8_t reg_src(uint8_t byte) { return byte & REG_SRC_MASK; }
     static uint32_t imm_val(const uint8_t& data) { return uint8_to_uint32(const_cast<uint8_t&>(data)); }
