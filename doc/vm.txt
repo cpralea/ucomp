@@ -40,9 +40,9 @@ Instruction encoding
 
 
 Opcode encoding
-    |  operation | imm/reg  |
-    |___7 bits___|__1 bit __|
-    |________1 byte_________|
+    |  operation |     am     |
+    |___6 bits___|___2 bits___|
+    |_________1 byte__________|
 
 
 Operand encoding

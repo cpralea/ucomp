@@ -64,7 +64,7 @@ def gen_i(imm: int) -> int:
 
 
 def gen_opcode(instr: Instruction, am: AccessMode) -> int:
-    return (instr << 1) + am
+    return (instr << 2) + am
 def gen_instr(instr: Instruction) -> int:
     return gen_opcode(instr, AccessMode.REG)
 def gen_rr(dst: Register, src: Register) -> int:

@@ -42,8 +42,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def unpack_opcode(hex_byte: str) -> Tuple[Instruction, AccessMode]:
-    instr: Instruction = Instruction((int(hex_byte, base=16) & ~0x01) >> 1)
-    am: AccessMode = AccessMode(int(hex_byte, base=16) & 0x01)
+    instr: Instruction = Instruction((int(hex_byte, base=16) & ~0x03) >> 2)
+    am: AccessMode = AccessMode(int(hex_byte, base=16) & 0x03)
     return instr, am
 
 

@@ -105,12 +105,12 @@ protected:
     static const uint32_t FLAG_LT               = 0b00000100;
     static const uint32_t FLAG_GT               = 0x00001000;
 
-    static const uint8_t OPCODE_MASK            = 0xfe;
+    static const uint8_t OPCODE_MASK            = 0xfc;
     static const uint8_t REG_IMM_MASK           = 0x01;
     static const uint8_t REG_DST_MASK           = 0xf0;
     static const uint8_t REG_SRC_MASK           = 0x0f;
 
-    static uint8_t instr(uint8_t byte) { return (byte & OPCODE_MASK) >> 1; }
+    static uint8_t instr(uint8_t byte) { return (byte & OPCODE_MASK) >> 2; }
     static uint8_t reg_imm(uint8_t byte) { return byte & REG_IMM_MASK; }
     static uint8_t reg_dst(uint8_t byte) { return (byte & REG_DST_MASK) >> 4; }
     static uint8_t reg_src(uint8_t byte) { return byte & REG_SRC_MASK; }
