@@ -114,10 +114,12 @@ protected:
     static uint8_t access_mode(uint8_t byte) { return byte & ACCESS_MODE_MASK; }
     static uint8_t reg_dst(uint8_t byte) { return (byte & REG_DST_MASK) >> 4; }
     static uint8_t reg_src(uint8_t byte) { return byte & REG_SRC_MASK; }
-    static uint32_t imm_val(const uint8_t& data) { return uint8_to_uint32(const_cast<uint8_t&>(data)); }
+    static uint32_t imm32(const uint8_t& data) { return uint8_to_uint32(const_cast<uint8_t&>(data)); }
+    static uint16_t imm16(const uint8_t& data) { return uint8_to_uint16(const_cast<uint8_t&>(data)); }
 
     static int32_t& uint32_to_int32(uint32_t& val) { return reinterpret_cast<int32_t&>(val); }
     static uint32_t& uint8_to_uint32(uint8_t& val) { return reinterpret_cast<uint32_t&>(val); }
+    static uint16_t& uint8_to_uint16(uint8_t& val) { return reinterpret_cast<uint16_t&>(val); }
 
     void dump_registers() const;
 };
@@ -135,5 +137,5 @@ private:
 
     void sys_enter();
 
-    void trace(uint8_t ri, uint8_t dst, uint8_t src, uint32_t iv) const;
+    void trace(uint8_t ri, uint8_t dst, uint8_t src, uint16_t idx, uint32_t iv) const;
 };

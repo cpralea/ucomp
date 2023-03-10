@@ -37,6 +37,7 @@ class Instruction(IntEnum):
 class AccessMode(IntEnum):
     REG     =  0
     IMM     =  1
+    REG_IDX =  2
 
     def __repr__(self) -> str:
         return self.name

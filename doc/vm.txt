@@ -5,28 +5,28 @@ Registers
 
 
 Instructions
-    LOAD        <reg>,      [<reg>]
-    STORE       [<reg>],    <reg>
-    MOV         <reg>,      <reg>
-    MOV         <reg>,      <imm>
-    ADD         <reg>,      <reg>
-    ADD         <reg>,      <imm>
-    SUB         <reg>,      <reg>
-    SUB         <reg>,      <imm>
-    AND         <reg>,      <reg>
-    AND         <reg>,      <imm>
-    OR          <reg>,      <reg>
-    OR          <reg>,      <imm>
-    XOR         <reg>,      <reg>
-    XOR         <reg>,      <imm>
-    NOT         <reg>
-    CMP         <reg>,      <reg>
-    CMP         <reg>,      <imm>
-    PUSH        <reg>
-    POP         <reg>
-    CALL        <imm>
+    LOAD            <reg>,                 [<reg> (+ <idx>)?]
+    STORE          [<reg> (+ <idx>)?],      <reg>
+    MOV             <reg>,                  <reg>
+    MOV             <reg>,                  <imm>
+    ADD             <reg>,                  <reg>
+    ADD             <reg>,                  <imm>
+    SUB             <reg>,                  <reg>
+    SUB             <reg>,                  <imm>
+    AND             <reg>,                  <reg>
+    AND             <reg>,                  <imm>
+    OR              <reg>,                  <reg>
+    OR              <reg>,                  <imm>
+    XOR             <reg>,                  <reg>
+    XOR             <reg>,                  <imm>
+    NOT             <reg>
+    CMP             <reg>,                  <reg>
+    CMP             <reg>,                  <imm>
+    PUSH            <reg>
+    POP             <reg>
+    CALL            <imm>
     RET
-    JMP<cond>   <imm>
+    JMP<cond>       <imm>
 where
     <reg>       is any register
     <imm>       is any immediate value
@@ -35,8 +35,8 @@ where
 
 
 Instruction encoding
-    |  opcode  | 1st operand    2nd operand |
-    |__1 byte__|________1/4/5 bytes_________|
+    |  opcode  | 1st operand   2nd operand |
+    |__1 byte__|______1/3/4/5 bytes________|
 
 
 Opcode encoding
@@ -46,8 +46,8 @@ Opcode encoding
 
 
 Operand encoding
-    |   reg    |        |    imm    |
-    |__4 bits__|        |__4 bytes__|
+    |   reg    |        |    imm    |        |    idx    |
+    |__4 bits__|        |__4 bytes__|        |__2 bytes__|
 
 
 Calling convention

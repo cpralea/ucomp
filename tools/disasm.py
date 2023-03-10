@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from dataclasses import dataclass
+from math import ceil
 from typing import Dict, List, Set, TextIO, Tuple
 
 from asmspec import Instruction, AccessMode, Register
@@ -13,6 +14,7 @@ class VMInstrData:
     am: AccessMode
     dst: Register | int | None  = None
     src: Register | int | None  = None
+    idx: int | None             = None
     label: str | None           = None
     len: int                    = 0
 
@@ -95,9 +97,9 @@ def disasm_reg_reg(input: TextIO) -> Tuple[Register, Register]:
     return Register(rr >> 4), Register(rr & 0x0f)
 
 
-def disasm_imm(input: TextIO) -> int:
+def disasm_imm(input: TextIO, width: int) -> int:
     hex_bytes: List[str] = []
-    for _ in range(4):
+    for _ in range(ceil(width/8)):
         hex_bytes.append(get_hex_byte(input))
     return int(''.join(reversed(hex_bytes)), base=16)
 
@@ -115,7 +117,7 @@ def disasm_instr_r(input: TextIO) -> VMInstrData:
 
 def disasm_instr_i(input: TextIO) -> VMInstrData:
     instr, am = disasm_opcode(input)
-    return VMInstrData(instr, am, dst=disasm_imm(input), len=5)
+    return VMInstrData(instr, am, dst=disasm_imm(input, 32), len=5)
 
 
 def disasm_instr_rr(input: TextIO) -> VMInstrData:
@@ -127,10 +129,17 @@ def disasm_instr_rr(input: TextIO) -> VMInstrData:
 def disasm_instr_ri(input: TextIO) -> VMInstrData:
     instr, am = disasm_opcode(input)
     dst, _ = disasm_reg_reg(input)
-    return VMInstrData(instr, am, dst=dst, src=disasm_imm(input), len=6)
+    return VMInstrData(instr, am, dst=dst, src=disasm_imm(input, 32), len=6)
 
 
-def disasm_instr_src_dst(input: TextIO) -> VMInstrData:
+def disasm_instr_rr_idx(input: TextIO) -> VMInstrData:
+    instr, am = disasm_opcode(input)
+    dst, src = disasm_reg_reg(input)
+    idx = disasm_imm(input, 16)
+    return VMInstrData(instr, am, dst=dst, src=src, idx=idx, len=4)
+
+
+def disasm_instr_src_dst_idx(input: TextIO) -> VMInstrData:
     opcode: Tuple[Instruction, AccessMode] | None = peek_opcode(input)
     assert opcode is not None
     _, am = opcode
@@ -139,28 +148,30 @@ def disasm_instr_src_dst(input: TextIO) -> VMInstrData:
             return disasm_instr_rr(input)
         case AccessMode.IMM:
             return disasm_instr_ri(input)
+        case AccessMode.REG_IDX:
+            return disasm_instr_rr_idx(input)
 
 
 def disasm_load(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_store(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_mov(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_add(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_sub(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_and(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_or(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_xor(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_not(input: TextIO) -> VMInstrData:
     return disasm_instr_r(input)
 def disasm_cmp(input: TextIO) -> VMInstrData:
-    return disasm_instr_src_dst(input)
+    return disasm_instr_src_dst_idx(input)
 def disasm_push(input: TextIO) -> VMInstrData:
     return disasm_instr_r(input)
 def disasm_pop(input: TextIO) -> VMInstrData:
@@ -283,6 +294,7 @@ def dump_program(output: TextIO):
         instr: Instruction                  = data.instr
         dst: Register | int | str | None    = None
         src: Register | int | None          = None
+        idx: int | None                     = None
 
         if type(data.dst) == int:
             addr: int = data.dst                                            # type: ignore
@@ -294,6 +306,7 @@ def dump_program(output: TextIO):
             dst = data.dst
         if type(data.src) == int or type(data.src) == Register:
             src = data.src
+        idx = data.idx
 
         asm: str = ''
         if data.label is not None:
@@ -301,12 +314,14 @@ def dump_program(output: TextIO):
         asm += f"    {instr}"
         if dst is not None:
             if instr == Instruction.STORE:
-                asm += f" [{dst}]"
+                assert idx is not None
+                asm += f" [{dst} + {idx}]" if idx else f" [{dst}"
             else:
                 asm += f" {dst}"
         if src is not None:
             if instr == Instruction.LOAD:
-                asm += f", [{src}]"
+                assert idx is not None
+                asm += f", [{src} + {idx}]" if idx else f", [{src}]"
             else:
                 asm += f", {src}"
 

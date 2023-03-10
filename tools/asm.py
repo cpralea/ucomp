@@ -27,12 +27,12 @@ SYS_ENTER_ASM = io.StringIO("""
         jmp $sys_enter
 """)
 
-REGEX_IMM_HEX               = re.compile(r'^(0x[0-9a-fA-F]+)$')
+REGEX_IMM_HEX               = re.compile(r'^(0[xX][0-9a-fA-F]+)$')
 REGEX_IMM_DEC               = re.compile(r'^([0-9]+)$')
 REGEX_LABEL                 = re.compile(r'^(.+):$')
 REGEX_INSTR                 = re.compile(r'^([a-zA-Z]+).*$')
-REGEX_LOAD                  = re.compile(r'^LOAD\s+([^\s]+)\s*,\s*\[([^\s]+)\]$')
-REGEX_STORE                 = re.compile(r'^STORE\s+\[([^\s]+)\]\s*,\s*([^\s]+)$')
+REGEX_LOAD                  = re.compile(r'^LOAD\s+([^\s]+)\s*,\s*\[([^\s+]+)\s*(\+\s*([^\s]+))?\]$')
+REGEX_STORE                 = re.compile(r'^STORE\s+\[([^\s+]+)\s*(\+\s*([^\s]+))?\]\s*,\s*([^\s]+)$')
 REGEX_GENERIC_INSTR_DST_SRC = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*,\s*([^\s]+)$')
 REGEX_GENERIC_INSTR_OP      = re.compile(r'^[a-zA-Z]+\s+([^\s]+)\s*$')
 
@@ -57,8 +57,8 @@ def demangle_label(label: str) -> List[str]:
     return label.split(':')
 
 
-def gen_i(imm: int) -> int:
-    big_endian: str = f"{imm:0>8x}"
+def gen_i(imm: int, width: int) -> int:
+    big_endian: str = f"{imm:0>{ceil(width/4)}x}"
     little_endian: str = ''.join(reversed([big_endian[i:i+2] for i in range(0, len(big_endian), 2)]))
     return int(little_endian, base=16)
 
@@ -70,23 +70,25 @@ def gen_instr(instr: Instruction) -> int:
 def gen_rr(dst: Register, src: Register) -> int:
     return (dst << 4) + src
 def gen_ri(reg: Register, imm: int) -> int:
-    return ((reg << 4) << 32) + gen_i(imm)
+    return ((reg << 4) << 32) + gen_i(imm, 32)
 def gen_instr_rr(instr: Instruction, dst: Register, src: Register) -> int:
     return (gen_opcode(instr, AccessMode.REG) << 8) + gen_rr(dst, src)
 def gen_instr_ri(instr: Instruction, dst: Register, src: int) -> int:
     return (gen_opcode(instr, AccessMode.IMM) << 40) + gen_ri(dst, src)
+def gen_instr_rr_idx(instr: Instruction, dst: Register, src: Register, idx: int) -> int:
+    return (gen_opcode(instr, AccessMode.REG_IDX) << 24) + (gen_rr(dst, src) << 16) + gen_i(idx, 16)
 def gen_r(reg: Register) -> int:
     return reg << 4
 def gen_instr_r(instr: Instruction, reg: Register) -> int:
     return (gen_opcode(instr, AccessMode.REG) << 8) + gen_r(reg)
 def gen_instr_i(instr: Instruction, imm: int) -> int:
-    return (gen_opcode(instr, AccessMode.IMM) << 32) + gen_i(imm)
+    return (gen_opcode(instr, AccessMode.IMM) << 32) + gen_i(imm, 32)
 
 
-def gen_load_rr(dst: Register, src: Register) -> int:
-    return gen_instr_rr(Instruction.LOAD, dst, src)
-def gen_store_rr(dst: Register, src: Register) -> int:
-    return gen_instr_rr(Instruction.STORE, dst, src)
+def gen_load_rri(dst: Register, src: Register, idx: int) -> int:
+    return gen_instr_rr_idx(Instruction.LOAD, dst, src, idx)
+def gen_store_rir(dst: Register, idx: int, src: Register) -> int:
+    return gen_instr_rr_idx(Instruction.STORE, dst, src, idx)
 def gen_mov_rr(dst: Register, src: Register) -> int:
     return gen_instr_rr(Instruction.MOV, dst, src)
 def gen_mov_ri(dst: Register, src: int) -> int:
@@ -157,11 +159,11 @@ def asm_generic_instr_dst_src(
 
     dst, src = Register[m.group(1).upper()], m.group(2).upper()
 
-    m = REGEX_IMM_DEC.match(src)
+    b, m = 10, REGEX_IMM_DEC.match(src)
     if m is None:
-        m = REGEX_IMM_HEX.match(src)
+        b, m = 16, REGEX_IMM_HEX.match(src)
     if m is not None:
-        src = int(src)
+        src = int(src, base=b)
         return gen_ri(dst, src)
 
     src = Register[src]
@@ -180,11 +182,11 @@ def asm_generic_instr_op(
     
     op = m.group(1).upper()
     
-    m = REGEX_IMM_DEC.match(op)
+    b, m = 10, REGEX_IMM_DEC.match(op)
     if m is None:
-        m = REGEX_IMM_HEX.match(op)
+        b, m = 16, REGEX_IMM_HEX.match(op)
     if m is not None:
-        op = int(op)
+        op = int(op, base=b)
         assert (gen_r is None) and (gen_i is not None)
         return gen_i(op)
 
@@ -206,13 +208,27 @@ def asm_generic_instr_op(
 def asm_load(line: str) -> int:
     m = REGEX_LOAD.match(line.upper())
     assert m is not None
-    dst, src = Register[m.group(1).upper()], Register[m.group(2).upper()]
-    return gen_load_rr(dst, src)
+    dst, src, idx = Register[m.group(1).upper()], Register[m.group(2).upper()], m.group(4)
+    if idx is not None:
+        b, m = 10, REGEX_IMM_DEC.match(idx)
+        if m is None:
+            b, m = 16, REGEX_IMM_HEX.match(idx)
+        idx = int(idx, base=b)
+    else:
+        idx = 0
+    return gen_load_rri(dst, src, idx)
 def asm_store(line: str) -> int:
     m = REGEX_STORE.match(line.upper())
     assert m is not None
-    dst, src = Register[m.group(1).upper()], Register[m.group(2).upper()]
-    return gen_store_rr(dst, src)
+    dst, idx, src = Register[m.group(1).upper()], m.group(3), Register[m.group(4).upper()]
+    if idx is not None:
+        b, m = 10, REGEX_IMM_DEC.match(idx)
+        if m is None:
+            b, m = 16, REGEX_IMM_HEX.match(idx)
+        idx = int(idx, base=b)
+    else:
+        idx = 0
+    return gen_store_rir(dst, idx, src)
 def asm_mov(line: str) -> int:
     return asm_generic_instr_dst_src(line, REGEX_GENERIC_INSTR_DST_SRC, gen_mov_rr, gen_mov_ri)
 def asm_add(line: str) -> int:
@@ -359,7 +375,7 @@ def link():
     for label, refs in label_refs.items():
         addr = label_addr[label]
         for ref in refs:
-            program[ref] |= gen_i(addr)
+            program[ref] |= gen_i(addr, 32)
 
 
 def asm_file(input: TextIO):
