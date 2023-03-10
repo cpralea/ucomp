@@ -5,8 +5,8 @@ Registers
 
 
 Instructions
-    LOAD            <reg>,                 [<reg> (+ <idx>)?]
-    STORE          [<reg> (+ <idx>)?],      <reg>
+    LOAD            <reg>,                 [<reg> (+/- <idx>)?]
+    STORE          [<reg> (+/- <idx>)?],    <reg>
     MOV             <reg>,                  <reg>
     MOV             <reg>,                  <imm>
     ADD             <reg>,                  <reg>

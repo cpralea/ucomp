@@ -97,11 +97,11 @@ def disasm_reg_reg(input: TextIO) -> Tuple[Register, Register]:
     return Register(rr >> 4), Register(rr & 0x0f)
 
 
-def disasm_imm(input: TextIO, width: int) -> int:
+def disasm_imm(input: TextIO, width: int, signed: bool = False) -> int:
     hex_bytes: List[str] = []
     for _ in range(ceil(width/8)):
         hex_bytes.append(get_hex_byte(input))
-    return int(''.join(reversed(hex_bytes)), base=16)
+    return int.from_bytes(bytes.fromhex(''.join(hex_bytes)), byteorder='little', signed=signed)
 
 
 def disasm_instr(input: TextIO) -> VMInstrData:
@@ -135,7 +135,7 @@ def disasm_instr_ri(input: TextIO) -> VMInstrData:
 def disasm_instr_rr_idx(input: TextIO) -> VMInstrData:
     instr, am = disasm_opcode(input)
     dst, src = disasm_reg_reg(input)
-    idx = disasm_imm(input, 16)
+    idx = disasm_imm(input, 16, signed=True)
     return VMInstrData(instr, am, dst=dst, src=src, idx=idx, len=4)
 
 
@@ -315,13 +315,13 @@ def dump_program(output: TextIO):
         if dst is not None:
             if instr == Instruction.STORE:
                 assert idx is not None
-                asm += f" [{dst} + {idx}]" if idx else f" [{dst}"
+                asm += f" [{dst} {'+' if idx >= 0 else '-'} {abs(idx)}]" if idx else f" [{dst}"
             else:
                 asm += f" {dst}"
         if src is not None:
             if instr == Instruction.LOAD:
                 assert idx is not None
-                asm += f", [{src} + {idx}]" if idx else f", [{src}]"
+                asm += f", [{src} {'+' if idx >= 0 else '-'} {abs(idx)}]" if idx else f", [{src}]"
             else:
                 asm += f", {src}"
 

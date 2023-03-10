@@ -71,7 +71,7 @@ void Interpreter::exec_program()
     };
 
     uint8_t am, dst, src;
-    uint16_t idx;
+    int16_t idx;
     uint32_t iv;
 
     DISPATCH(+0);
@@ -79,7 +79,7 @@ void Interpreter::exec_program()
     _load: {
         dst = reg_dst(mem[reg[PC] + 1]);
         src = reg_src(mem[reg[PC] + 1]);
-        idx = imm16(mem[reg[PC] + 2]);
+        idx = imm16s(mem[reg[PC] + 2]);
         TRACE();
         reg[dst] = uint8_to_uint32(mem[reg[src] + idx]);
         DISPATCH(+4);
@@ -88,7 +88,7 @@ void Interpreter::exec_program()
     _store: {
         dst = reg_dst(mem[reg[PC] + 1]);
         src = reg_src(mem[reg[PC] + 1]);
-        idx = imm16(mem[reg[PC] + 2]);
+        idx = imm16s(mem[reg[PC] + 2]);
         TRACE();
         uint8_to_uint32(mem[reg[dst] + idx]) = reg[src];
         DISPATCH(+4);
@@ -104,7 +104,7 @@ void Interpreter::exec_program()
             reg[dst] = reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm32(mem[reg[PC] + 2]);
+            iv = imm32u(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] = iv;
             DISPATCH(+6);
@@ -121,7 +121,7 @@ void Interpreter::exec_program()
             uint32_to_int32(reg[dst]) += uint32_to_int32(reg[src]);
             DISPATCH(+2);
         case IMM:
-            iv = imm32(mem[reg[PC] + 2]);
+            iv = imm32u(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] += iv;
             DISPATCH(+6);
@@ -138,7 +138,7 @@ void Interpreter::exec_program()
             uint32_to_int32(reg[dst]) -= uint32_to_int32(reg[src]);
             DISPATCH(+2);
         case IMM:
-            iv = imm32(mem[reg[PC] + 2]);
+            iv = imm32u(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] -= iv;
             DISPATCH(+6);
@@ -155,7 +155,7 @@ void Interpreter::exec_program()
             reg[dst] &= reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm32(mem[reg[PC] + 2]);
+            iv = imm32u(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] &= iv;
             DISPATCH(+6);
@@ -172,7 +172,7 @@ void Interpreter::exec_program()
             reg[dst] |= reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm32(mem[reg[PC] + 2]);
+            iv = imm32u(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] |= iv;
             DISPATCH(+6);
@@ -189,7 +189,7 @@ void Interpreter::exec_program()
             reg[dst] ^= reg[src];
             DISPATCH(+2);
         case IMM:
-            iv = imm32(mem[reg[PC] + 2]);
+            iv = imm32u(mem[reg[PC] + 2]);
             TRACE();
             reg[dst] ^= iv;
             DISPATCH(+6);
@@ -221,7 +221,7 @@ void Interpreter::exec_program()
                 reg[FLAGS] |= FLAG_EQ;
             DISPATCH(+2);
         case IMM:
-            iv = imm32(mem[reg[PC] + 2]);
+            iv = imm32u(mem[reg[PC] + 2]);
             TRACE();
             reg[FLAGS] = 0;
             if (reg[dst] == 0)
@@ -253,7 +253,7 @@ void Interpreter::exec_program()
     }
 
     _call: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         reg[SP] -= 4;
         uint8_to_uint32(mem[reg[SP]]) = reg[PC] + 5;
@@ -269,11 +269,11 @@ void Interpreter::exec_program()
     }
 
     _jmp: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         switch (reg[PC]) {
         case SYS_ENTER_ADDR: {
-            uint32_t syscall_id = imm32(mem[reg[SP] + 4]);
+            uint32_t syscall_id = imm32u(mem[reg[SP] + 4]);
             switch (syscall_id) {
             case SYSCALL_VM_EXIT:
                 return;
@@ -289,7 +289,7 @@ void Interpreter::exec_program()
     }
 
     _jmpz: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_Z) {
             reg[PC] = iv;
@@ -300,7 +300,7 @@ void Interpreter::exec_program()
     }
 
     _jmpnz: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_Z) {
             DISPATCH(+5);
@@ -311,7 +311,7 @@ void Interpreter::exec_program()
     }
 
     _jmpeq: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_EQ) {
             reg[PC] = iv;
@@ -322,7 +322,7 @@ void Interpreter::exec_program()
     }
 
     _jmpne: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_EQ) {
             DISPATCH(+5);
@@ -333,7 +333,7 @@ void Interpreter::exec_program()
     }
 
     _jmpgt: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_GT) {
             reg[PC] = iv;
@@ -344,7 +344,7 @@ void Interpreter::exec_program()
     }
 
     _jmplt: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & FLAG_LT) {
             reg[PC] = iv;
@@ -355,7 +355,7 @@ void Interpreter::exec_program()
     }
 
     _jmpge: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & (FLAG_GT | FLAG_EQ)) {
             reg[PC] = iv;
@@ -366,7 +366,7 @@ void Interpreter::exec_program()
     }
 
     _jmple: {
-        iv = imm32(mem[reg[PC] + 1]);
+        iv = imm32u(mem[reg[PC] + 1]);
         TRACE();
         if (reg[FLAGS] & (FLAG_LT | FLAG_EQ)) {
             reg[PC] = iv;
@@ -388,12 +388,12 @@ void Interpreter::fini_execution()
 
 void Interpreter::sys_enter()
 {
-    uint32_t syscall_id = imm32(mem[reg[SP] + 4]);
+    uint32_t syscall_id = imm32u(mem[reg[SP] + 4]);
     switch (syscall_id) {
     case SYSCALL_VM_EXIT:
         std::abort();
     case SYSCALL_DISPLAY_INT: {
-        int32_t val = imm32(mem[reg[SP] + 8]);
+        int32_t val = imm32u(mem[reg[SP] + 8]);
         cout << val << endl;
         break;
     }
@@ -403,7 +403,7 @@ void Interpreter::sys_enter()
 }
 
 
-void Interpreter::trace(uint8_t am, uint8_t dst, uint8_t src, uint16_t idx, uint32_t iv) const
+void Interpreter::trace(uint8_t am, uint8_t dst, uint8_t src, int16_t idx, uint32_t iv) const
 {
     if (!debug)
         return;

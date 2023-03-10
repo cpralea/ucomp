@@ -24,30 +24,21 @@ main:
     call $sys_enter
 
 fibonacci:
-    load r12, [sp]
-
-    mov r0, sp
-    add r0, 4
-    load r0, [r0]
+    load r0, [sp + 4]
 
     cmp r0, 1
     jmple .return
 
-    push r12
-
-    mov r1, r0
-    sub r1, 1
-    push r1
-    mov r2, r0
-    sub r2, 2
-    push r2
-
+    load r0, [sp + 4]
+    sub r0, 1
+    push r0
     call fibonacci
-    pop r2
-    pop r1
-    push r2
-    push r1
+
+    load r0, [sp + 8]
+    sub r0, 2
+    push r0
     call fibonacci
+
     pop r1
     pop r2
     
@@ -55,10 +46,9 @@ fibonacci:
     add r0, r1
     add r0, r2
 
-    pop r12
-
 .return:
     add sp, 8
     push r0
-    push r12
+    load r0, [sp - 4]
+    push r0
     ret

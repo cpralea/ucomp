@@ -24,17 +24,10 @@ main:
     call $sys_enter
 
 factorial:
-    load r12, [sp]
+    load r0, [sp + 4]
 
-    mov r0, sp
-    add r0, 4
-    load r1, [r0]
-
-    mov r0, r1
     cmp r0, 1
     jmpeq .return
-
-    push r12
 
     push r0
     sub r0, 1
@@ -43,22 +36,16 @@ factorial:
     call multiply
     pop r0
 
-    pop r12
-
 .return:
     add sp, 8
     push r0
-    push r12
+    load r0, [sp - 4]
+    push r0
     ret
 
 multiply:
-    load r12, [sp]
-
-    mov r0, sp;
-    add r0, 8
-    load r1, [r0];
-    sub r0, 4
-    load r2, [r0]
+    load r1, [sp + 8]
+    load r2, [sp + 4]
 
     cmp r2, r1
     jmple .do_multiply
@@ -78,5 +65,6 @@ multiply:
 .return:
     add sp, 12
     push r0
-    push r12
+    load r0, [sp - 8]
+    push r0
     ret
