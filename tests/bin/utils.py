@@ -25,5 +25,5 @@ def print_green(msg: str, end: str | None = None):
 
 
 def execute(cmd: str) -> bool:
-    process = subprocess.run(cmd, shell=True)
+    process = subprocess.run(cmd, shell=True, executable='/bin/bash')
     return True if process.returncode == 0 else False

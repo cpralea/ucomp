@@ -60,7 +60,7 @@ def demangle_label(label: str) -> List[str]:
 def gen_i(imm: int, width: int, signed: bool = False) -> int:
     return int.from_bytes(
         int.to_bytes(imm, length=ceil(width/8), byteorder='little', signed=signed),
-        signed=False)
+        byteorder='big', signed=False)
 
 
 def gen_opcode(instr: Instruction, am: AccessMode) -> int:
